@@ -523,10 +523,11 @@ std::string Simulator::SimulatorCompilationOptions(SimulatorType type) {
   switch (type) {
     case SimulatorType::Verilator: {
       std::string options =
-          "-cc --assert -Wall -Wno-DECLFILENAME "
+          "--assert -Wall -Wno-DECLFILENAME "
           "-Wno-UNUSEDSIGNAL "
           "-Wno-TIMESCALEMOD "
-          "-Wno-WIDTH -Wno-fatal -Wno-BLKANDNBLK ";
+          "-Wno-WIDTH -Wno-fatal -Wno-BLKANDNBLK "
+          "--main --build ";
       switch (m_waveType) {
         case WaveformType::VCD:
           options += "--trace ";
