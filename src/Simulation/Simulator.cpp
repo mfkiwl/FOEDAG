@@ -527,7 +527,7 @@ std::string Simulator::SimulatorCompilationOptions(SimulatorType type) {
           "-Wno-UNUSEDSIGNAL "
           "-Wno-TIMESCALEMOD "
           "-Wno-WIDTH -Wno-fatal -Wno-BLKANDNBLK "
-          "--main --build ";
+          "--main ";
       switch (m_waveType) {
         case WaveformType::VCD:
           options += "--trace ";
