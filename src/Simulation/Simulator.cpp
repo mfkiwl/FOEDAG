@@ -523,7 +523,7 @@ std::string Simulator::SimulatorCompilationOptions(SimulatorType type) {
   switch (type) {
     case SimulatorType::Verilator: {
       std::string options =
-          "--assert -Wall -Wno-DECLFILENAME "
+          "-cc --assert -Wall -Wno-DECLFILENAME "
           "-Wno-UNUSEDSIGNAL "
           "-Wno-TIMESCALEMOD "
           "-Wno-WIDTH -Wno-fatal -Wno-BLKANDNBLK "
