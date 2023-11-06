@@ -196,8 +196,8 @@ jobs:
       run: |
         env
         source /opt/rh/devtoolset-11/enable
-        which gcc 
-        which g++ 
+        which gcc && gcc --version
+        which g++ && g++ --version
 
     - name: Configure shell
       run: |
