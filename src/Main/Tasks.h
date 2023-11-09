@@ -24,7 +24,15 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <QDialog>
 
+#include <QDebug>
+
 namespace FOEDAG {
+
+class TWidget final : public QWidget {
+public:
+TWidget() { qInfo() << "TWidget"; }
+~TWidget() override final { qInfo() << "~TWidget"; }
+};
 
 class Compiler;
 class ITaskReportManager;

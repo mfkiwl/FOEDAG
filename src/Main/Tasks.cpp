@@ -80,7 +80,7 @@ void openReportView(Compiler* compiler, const Task* task,
   }
 
   if (newReport) {
-    auto reportsWidget = new QWidget;
+    auto reportsWidget = new TWidget;
     auto reportLayout = new QVBoxLayout;
     reportLayout->setContentsMargins(0, 0, 0, 0);
 
