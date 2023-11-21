@@ -24,6 +24,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "Configuration/CFGCommon/CFGCommon.h"
 #include "libusb.h"
 
+// testing
+#include <chrono>
+#include <thread>
+
 #define HM_USB_DESC_LENGTH (256)
 #define HM_DEFAULT_CABLE_SPEED_KHZ (1000)
 
@@ -251,4 +255,19 @@ std::vector<Device> HardwareManager::get_devices(const Cable& cable) {
   }
 
   return devices;
+}
+
+int HardwareManager::program_fpga(Device device, std::string bitstream_filepath,
+                                  std::atomic<bool>& stop,
+                                  progress_func_type progress_callback) {
+  for (int i = 0; i <= 1000; ++i) {
+    if (progress_callback) {
+      progress_callback(i / 10.0);
+    }
+    if (stop) return -1;
+    std::this_thread::sleep_for(
+        std::chrono::milliseconds(5));  // Simulate some work
+  }
+
+  return 1;
 }
