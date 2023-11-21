@@ -1,0 +1,40 @@
+// ProgrammerTool.h
+#ifndef PROGRAMMERTOOL_H
+#define PROGRAMMERTOOL_H
+
+#include "Configuration/HardwareManager/ProgrammingAdapter.h"
+
+namespace FOEDAG {
+
+struct Device;
+
+enum class ProgramFlashOperation : uint32_t;
+
+class ProgrammerTool : public ProgrammingAdapter {
+ public:
+  ProgrammerTool(ProgrammingAdapter* adapter);
+  ~ProgrammerTool() override;
+
+  int program_fpga(const Device& device, const std::string& bitfile,
+                   std::atomic<bool>& stop, std::ostream* outStream = nullptr,
+                   OutputMessageCallback callbackMsg = nullptr,
+                   ProgressCallback callbackProgress = nullptr) override;
+  int program_flash(const Device& device, const std::string& bitfile,
+                    std::atomic<bool>& stop, ProgramFlashOperation modes,
+                    std::ostream* outStream = nullptr,
+                    OutputMessageCallback callbackMsg = nullptr,
+                    ProgressCallback callbackProgress = nullptr) override;
+  int program_otp(const Device& device, const std::string& bitfile,
+                  std::atomic<bool>& stop, std::ostream* outStream = nullptr,
+                  OutputMessageCallback callbackMsg = nullptr,
+                  ProgressCallback callbackProgress = nullptr) override;
+  int query_fpga_status(const Device& device, CfgStatus& cfgStatus,
+                        std::string& outputMessage) override;
+
+ private:
+  ProgrammingAdapter* m_adapter;
+};
+
+}  // namespace FOEDAG
+
+#endif  // PROGRAMMERTOOL_H

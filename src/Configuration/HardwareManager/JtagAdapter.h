@@ -17,32 +17,19 @@ GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
- */
+*/
 
-#pragma once
-#include "Programmer.h"
+#ifndef __JTAGADAPTER_H__
+#define __JTAGADAPTER_H__
 
+#include <cstdint>
+#include <vector>
+
+#include "Cable.h"
 namespace FOEDAG {
-
-class HwDevices {
+class JtagAdapter {
  public:
-  HwDevices() = default;
-  HwDevices(const Cable& cable);
-  HwDevices(const HwDevices& other);
-  HwDevices operator=(const HwDevices& other);
-  const Cable& getCable() const;
-  const std::vector<Device>& getDevices() const;
-
-  void addDevices(const std::vector<Device> sourceDevices);
-  void addDevice(const Device& device);
-  void clearDevices();
-  size_t getDevicesCount() const;
-  bool findDevice(uint32_t index, Device& device) const;
-  bool findDevice(std::string name, Device& device) const;
-
- private:
-  Cable m_cable;
-  std::vector<Device> m_devices;
+  virtual std::vector<uint32_t> scan(const Cable &cable) = 0;
 };
-
 }  // namespace FOEDAG
+#endif  //__JTAGADAPTER_H__

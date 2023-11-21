@@ -24,6 +24,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "CFGCommon/CFGCommon.h"
 #include "Programmer.h"
+#include "Programmer_errror_code.h"
 
 void progressCallback(std::string msg) { CFG_POST_MSG(msg.c_str()); }
 
@@ -71,16 +72,16 @@ int main(int argc, const char** argv) {
   CFG_POST_MSG("-- GetAvailableCables(cables) --")
   for (auto& cable : cables) {
     CFG_POST_MSG("--------------")
-    CFG_POST_MSG("product ID: 0x%04x", cable.productId);
-    CFG_POST_MSG("vendor  ID: 0x%04x", cable.vendorId);
-    CFG_POST_MSG("serial    : %s", cable.serialNumber.c_str());
-    CFG_POST_MSG("desc      : %s", cable.description.c_str());
-    CFG_POST_MSG("bus       : %d", cable.busAddr);
-    CFG_POST_MSG("port      : %d", cable.portAddr);
-    CFG_POST_MSG("device    : %d", cable.deviceAddr);
-    CFG_POST_MSG("speed     : %d", cable.speed);
-    CFG_POST_MSG("transport : %d", cable.transport);
-    CFG_POST_MSG("channel   : %d", cable.channel);
+    // CFG_POST_MSG("product ID: 0x%04x", cable.productId);
+    // CFG_POST_MSG("vendor  ID: 0x%04x", cable.vendorId);
+    // CFG_POST_MSG("serial    : %s", cable.serialNumber.c_str());
+    // CFG_POST_MSG("desc      : %s", cable.description.c_str());
+    // CFG_POST_MSG("bus       : %d", cable.busAddr);
+    // CFG_POST_MSG("port      : %d", cable.portAddr);
+    // CFG_POST_MSG("device    : %d", cable.deviceAddr);
+    // CFG_POST_MSG("speed     : %d", cable.speed);
+    // CFG_POST_MSG("transport : %d", cable.transport);
+    // CFG_POST_MSG("channel   : %d", cable.channel);
   }
 
   CFG_POST_MSG("-- ListDevices(cables, outputMsg) --")
@@ -96,13 +97,13 @@ int main(int argc, const char** argv) {
   CFG_POST_MSG("### ListDevices API testing ###");
   for (auto& device : devices) {
     CFG_POST_MSG("-------------------------");
-    CFG_POST_MSG("Device name: %s", device.name.c_str());
-    CFG_POST_MSG("Device index: %d", device.index);
-    CFG_POST_MSG("Device jtagId: 0x%08x", device.tapInfo.idCode);
-    CFG_POST_MSG("Device mask: 0x%08x", device.tapInfo.irMask);
-    CFG_POST_MSG("Device irlength: %d", device.tapInfo.irLen);
-    CFG_POST_MSG("Device flashSize: %s bits",
-                 CFG_convert_number_to_unit_string(device.flashSize).c_str());
+    // CFG_POST_MSG("Device name: %s", device.name.c_str());
+    // CFG_POST_MSG("Device index: %d", device.index);
+    // CFG_POST_MSG("Device jtagId: 0x%08x", device.tapInfo.idCode);
+    // CFG_POST_MSG("Device mask: 0x%08x", device.tapInfo.irMask);
+    // CFG_POST_MSG("Device irlength: %d", device.tapInfo.irLen);
+    // CFG_POST_MSG("Device flashSize: %s bits",
+    //  CFG_convert_number_to_unit_string(device.flashSize).c_str());
     CFG_POST_MSG("-------------------------");
   }
 

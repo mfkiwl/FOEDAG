@@ -17,32 +17,32 @@ GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
- */
+*/
 
-#pragma once
-#include "Programmer.h"
+#ifndef __CABLE_H__
+#define __CABLE_H__
 
+#include <cstdint>
+#include <string>
 namespace FOEDAG {
+enum TransportType { JTAG = 1 };
 
-class HwDevices {
- public:
-  HwDevices() = default;
-  HwDevices(const Cable& cable);
-  HwDevices(const HwDevices& other);
-  HwDevices operator=(const HwDevices& other);
-  const Cable& getCable() const;
-  const std::vector<Device>& getDevices() const;
+enum CableType { FTDI, JLINK };
 
-  void addDevices(const std::vector<Device> sourceDevices);
-  void addDevice(const Device& device);
-  void clearDevices();
-  size_t getDevicesCount() const;
-  bool findDevice(uint32_t index, Device& device) const;
-  bool findDevice(std::string name, Device& device) const;
-
- private:
-  Cable m_cable;
-  std::vector<Device> m_devices;
+struct Cable {
+  uint32_t index;
+  uint16_t vendor_id;
+  uint16_t product_id;
+  uint8_t bus_addr;
+  uint8_t port_addr;
+  uint8_t device_addr;
+  uint16_t channel;
+  uint32_t speed;
+  std::string serial_number;
+  std::string description;
+  std::string name;
+  TransportType transport;
+  CableType cable_type;
 };
-
 }  // namespace FOEDAG
+#endif  // __CABLE_H__

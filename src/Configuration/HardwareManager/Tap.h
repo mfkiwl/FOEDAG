@@ -17,32 +17,20 @@ GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
- */
+*/
 
-#pragma once
-#include "Programmer.h"
+#ifndef __TAP_H__
+#define __TAP_H__
+
+#include <cstdint>
 
 namespace FOEDAG {
-
-class HwDevices {
- public:
-  HwDevices() = default;
-  HwDevices(const Cable& cable);
-  HwDevices(const HwDevices& other);
-  HwDevices operator=(const HwDevices& other);
-  const Cable& getCable() const;
-  const std::vector<Device>& getDevices() const;
-
-  void addDevices(const std::vector<Device> sourceDevices);
-  void addDevice(const Device& device);
-  void clearDevices();
-  size_t getDevicesCount() const;
-  bool findDevice(uint32_t index, Device& device) const;
-  bool findDevice(std::string name, Device& device) const;
-
- private:
-  Cable m_cable;
-  std::vector<Device> m_devices;
+struct Tap {
+  uint32_t index;
+  uint32_t idcode;
+  uint32_t irlength;
 };
 
 }  // namespace FOEDAG
+
+#endif  // __TAP_H__

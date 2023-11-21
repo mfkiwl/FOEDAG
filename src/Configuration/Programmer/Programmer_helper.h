@@ -33,7 +33,7 @@ struct TapInfo;
 struct CfgStatus;
 class ProgrammerGuiInterface;
 enum class ProgramFlashOperation : uint32_t;
-enum class TransportType : uint32_t;
+enum TransportType;
 
 struct ProgrammerCommand {
   std::string name;
