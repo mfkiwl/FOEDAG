@@ -22,12 +22,16 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #ifndef __HARDWAREMANAGER_H__
 #define __HARDWAREMANAGER_H__
 
+#include <atomic>
+#include <functional>
 #include <iostream>
 #include <stdexcept>
 
 #include "Device.h"
 #include "JtagAdapter.h"
 #include "Tap.h"
+
+using progress_func_type = std::function<void(double)>;
 
 struct HardwareManager_CABLE_INFO {
   std::string name;
@@ -61,6 +65,9 @@ class HardwareManager {
   bool find_device(std::string cable_name, uint32_t device_index,
                    Device &device, std::vector<Tap> &taplist,
                    bool numeric_name_as_index = false);
+  int program_fpga(Device device, std::string bitstream_filepath,
+                   std::atomic<bool> &stop,
+                   progress_func_type progress_callback = nullptr);
 
  private:
   static const std::vector<HardwareManager_CABLE_INFO> m_cable_db;
