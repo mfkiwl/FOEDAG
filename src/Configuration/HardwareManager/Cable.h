@@ -25,6 +25,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <cstdint>
 #include <string>
 
+// temp. rename Cable to Cable2 as another Cable is defined in programmer
+// subsystem
+#define Cable Cable2
+
+namespace FOEDAG {
+
 enum TransportType { JTAG = 1 };
 
 enum CableType { FTDI, JLINK };
@@ -44,5 +50,7 @@ struct Cable {
   TransportType transport;
   CableType cable_type;
 };
+
+}  // namespace FOEDAG
 
 #endif  // __CABLE_H__

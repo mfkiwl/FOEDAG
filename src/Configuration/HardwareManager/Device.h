@@ -28,7 +28,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "Cable.h"
 #include "Tap.h"
 
-enum DeviceType { GEMINI, OCLA, OEM /* for all non-RS devices */ };
+// temp. rename Device to Device2 as another Device is defined in programmer
+// subsystem
+#define Device Device2
+
+namespace FOEDAG {
+
+enum DeviceType { GEMINI, VIRGO, OCLA, OEM /* for all non-RS devices */ };
 
 struct Device {
   uint32_t index;
@@ -37,5 +43,7 @@ struct Device {
   Cable cable;
   Tap tap;
 };
+
+}  // namespace FOEDAG
 
 #endif  // __DEVICE_H__

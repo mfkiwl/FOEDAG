@@ -29,23 +29,22 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "JtagAdapter.h"
 
-using CommandExecutorFuncType = std::function<int(
-    const std::string &, std::string &, std::ostream *, std::atomic<bool> &)>;
+namespace FOEDAG {
 
 class OpenocdAdapter : public JtagAdapter {
  public:
-  OpenocdAdapter(std::string openocd_filepath,
-                 CommandExecutorFuncType command_executor)
-      : m_openocd_filepath(openocd_filepath),
-        m_command_executor(command_executor) {}
+  OpenocdAdapter(std::string openocd_filepath);
+  virtual ~OpenocdAdapter();
   virtual std::vector<uint32_t> scan(const Cable &cable);
 
- private:
-  int execute(const Cable &cable, std::string &output);
+ protected:
+  int execute(const Cable &cable, std::string cmd, std::string &output);
   std::string convert_transport_to_string(TransportType transport,
                                           std::string defval = "jtag");
+  std::string build_cable_config(const Cable &cable);
   std::string m_openocd_filepath;
-  CommandExecutorFuncType m_command_executor;
 };
+
+}  // namespace FOEDAG
 
 #endif  //__OPENOCDADAPTER_H__

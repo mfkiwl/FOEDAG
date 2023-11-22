@@ -26,6 +26,14 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <sstream>
 
 #include "Configuration/CFGCommon/CFGCommon.h"
+#include "Configuration/HardwareManager/HardwareManager.h"
+
+namespace FOEDAG {
+
+OpenocdAdapter::OpenocdAdapter(std::string openocd_filepath)
+    : m_openocd_filepath(openocd_filepath) {}
+
+OpenocdAdapter::~OpenocdAdapter() {}
 
 std::vector<uint32_t> OpenocdAdapter::scan(const Cable &cable) {
   std::vector<uint32_t> idcode_array;
@@ -44,7 +52,8 @@ std::vector<uint32_t> OpenocdAdapter::scan(const Cable &cable) {
   //  2 omap5912.unknown      Y    0x00000000 0x00000000     8 0x01  0x03
   //  3 auto0.tap             Y    0x20000913 0x00000000     5 0x01  0x03
 
-  CFG_ASSERT_MSG(execute(cable, output) == 0, "cmdexec error: %s",
+  // use "scan_chain" cmd to collect tap ids
+  CFG_ASSERT_MSG(execute(cable, "scan_chain", output) == 0, "cmdexec error: %s",
                  output.c_str());
   std::stringstream ss(output);
 
@@ -59,17 +68,41 @@ std::vector<uint32_t> OpenocdAdapter::scan(const Cable &cable) {
   return idcode_array;
 }
 
-int OpenocdAdapter::execute(const Cable &cable, std::string &output) {
+int OpenocdAdapter::execute(const Cable &cable, std::string cmd,
+                            std::string &output) {
   std::atomic<bool> stop = false;
   std::ostringstream ss;
 
   CFG_ASSERT(std::filesystem::exists(m_openocd_filepath));
-  CFG_ASSERT(m_command_executor != nullptr);
 
   ss << " -l /dev/stdout"  //<-- not windows friendly
      << " -d2";
+  ss << build_cable_config(cable);
+  ss << " -c \"init\"";
+  ss << " -c \"" << cmd << "\"";
+  ss << " -c \"exit\"";
 
-  // setup cable configuration
+  // run the command
+  int res =
+      CFG_execute_cmd("OPENOCD_DEBUG_LEVEL=-3 " + m_openocd_filepath + ss.str(),
+                      output, nullptr, stop);
+  return res;
+}
+
+std::string OpenocdAdapter::convert_transport_to_string(TransportType transport,
+                                                        std::string defval) {
+  switch (transport) {
+    case TransportType::JTAG:
+      return "jtag";
+      // Handle other transport types as needed
+  }
+  return defval;
+}
+
+std::string OpenocdAdapter::build_cable_config(const Cable &cable) {
+  std::ostringstream ss;
+
+  // setup cable type specific configuration
   if (cable.cable_type == FTDI) {
     ss << " -c \"adapter driver ftdi;"
        << "ftdi vid_pid " << std::hex << std::showbase << cable.vendor_id << " "
@@ -90,24 +123,26 @@ int OpenocdAdapter::execute(const Cable &cable, std::string &output) {
      << "telnet_port disabled;"
      << "gdb_port disabled;\"";
 
-  // use "scan_chain" cmd to collect tap ids
-  ss << " -c \"init\"";
-  ss << " -c \"scan_chain\"";
-  ss << " -c \"exit\"";
-
-  // run the command
-  int res = m_command_executor(
-      "OPENOCD_DEBUG_LEVEL=-3 " + m_openocd_filepath + ss.str(), output,
-      nullptr, stop);
-  return res;
+  return ss.str();
 }
 
-std::string OpenocdAdapter::convert_transport_to_string(TransportType transport,
-                                                        std::string defval) {
-  switch (transport) {
-    case TransportType::JTAG:
-      return "jtag";
-      // Handle other transport types as needed
+std::unique_ptr<HardwareManager> HardwareManager::create_instance(
+    CFGCommon_ARG *cmdarg) {
+  return std::make_unique<HardwareManager>(
+      std::make_unique<OpenocdAdapter>(cmdarg->toolPath));
+}
+
+}  // namespace FOEDAG
+
+/* for testing purpose */
+void test_hwmgr(CFGCommon_ARG *cmdarg) {
+  using namespace FOEDAG;
+
+  CFG_POST_MSG("I m here!");
+
+  auto hardware_manager = HardwareManager::create_instance(cmdarg);
+  auto cables = hardware_manager->get_cables();
+  for (auto &cable : cables) {
+    CFG_POST_MSG("CY: %s", cable.name.c_str());
   }
-  return defval;
 }

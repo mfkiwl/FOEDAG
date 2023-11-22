@@ -31,6 +31,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #define HM_USB_DESC_LENGTH (256)
 #define HM_DEFAULT_CABLE_SPEED_KHZ (1000)
 
+namespace FOEDAG {
+
 const std::vector<HardwareManager_CABLE_INFO> HardwareManager::m_cable_db = {
     {"RsFtdi", FTDI, 0x0403, 0x6011},
     {"RsFtdi", FTDI, 0x0403, 0x6010},
@@ -41,7 +43,8 @@ const std::vector<HardwareManager_DEVICE_INFO> HardwareManager::m_device_db = {
     {"Gemini", 0x1000563d, 5, 0xffffffff, GEMINI},
     {"OCLA", 0x10000db3, 5, 0xffffffff, OCLA}};
 
-HardwareManager::HardwareManager(JtagAdapter* adapter) : m_adapter(adapter) {
+HardwareManager::HardwareManager(std::unique_ptr<JtagAdapter> adapter)
+    : m_adapter(std::move(adapter)) {
   CFG_ASSERT(m_adapter != nullptr);
 }
 
@@ -257,6 +260,8 @@ std::vector<Device> HardwareManager::get_devices(const Cable& cable) {
   return devices;
 }
 
+/* By right below method should belong to Programmer application class.
+   Temporary park here */
 int HardwareManager::program_fpga(Device device, std::string bitstream_filepath,
                                   std::atomic<bool>& stop,
                                   progress_func_type progress_callback) {
@@ -271,3 +276,5 @@ int HardwareManager::program_fpga(Device device, std::string bitstream_filepath,
 
   return 1;
 }
+
+}  // namespace FOEDAG

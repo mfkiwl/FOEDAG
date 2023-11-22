@@ -25,11 +25,16 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <atomic>
 #include <functional>
 #include <iostream>
+#include <memory>
 #include <stdexcept>
 
 #include "Device.h"
 #include "JtagAdapter.h"
 #include "Tap.h"
+
+struct CFGCommon_ARG;
+
+namespace FOEDAG {
 
 using progress_func_type = std::function<void(double)>;
 
@@ -50,7 +55,7 @@ struct HardwareManager_DEVICE_INFO {
 
 class HardwareManager {
  public:
-  HardwareManager(JtagAdapter *m_adapter);
+  HardwareManager(std::unique_ptr<JtagAdapter> adapter);
   virtual ~HardwareManager();
   std::vector<Tap> get_taps(const Cable &cable);
   std::vector<Cable> get_cables();
@@ -65,14 +70,24 @@ class HardwareManager {
   bool find_device(std::string cable_name, uint32_t device_index,
                    Device &device, std::vector<Tap> &taplist,
                    bool numeric_name_as_index = false);
+
+  // helper to issue openocd command to program fpga
+  // This should be in Programmer application class
   int program_fpga(Device device, std::string bitstream_filepath,
                    std::atomic<bool> &stop,
                    progress_func_type progress_callback = nullptr);
 
+  // static helper to instantiate hardware manager with specific
+  // JtapAdapter implementation.
+  static std::unique_ptr<HardwareManager> create_instance(
+      CFGCommon_ARG *cmdarg);
+
  private:
   static const std::vector<HardwareManager_CABLE_INFO> m_cable_db;
   static const std::vector<HardwareManager_DEVICE_INFO> m_device_db;
-  JtagAdapter *m_adapter;
+  std::unique_ptr<JtagAdapter> m_adapter;
 };
+
+}  // namespace FOEDAG
 
 #endif  //__HARDWAREMANAGER_H__
