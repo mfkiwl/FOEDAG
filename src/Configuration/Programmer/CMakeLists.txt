@@ -61,7 +61,7 @@ add_library(
   HwDevices.cpp
   ProgrammerGuiInterface.h
 )
-target_link_libraries(${subsystem} PRIVATE ${LIBUSB_LIBRARIES} foedagutils)
+target_link_libraries(${subsystem} PRIVATE ${LIBUSB_LIBRARIES} foedagutils hardwaremanager)
 ###################
 #
 # foedag_bin which also has dependency on its own subsystem library
