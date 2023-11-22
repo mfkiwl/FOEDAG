@@ -129,7 +129,7 @@ std::string OpenocdAdapter::build_cable_config(const Cable &cable) {
 std::unique_ptr<HardwareManager> HardwareManager::create_instance(
     CFGCommon_ARG *cmdarg) {
   return std::make_unique<HardwareManager>(
-      std::make_unique<OpenocdAdapter>(cmdarg->toolPath));
+      std::make_unique<OpenocdAdapter>(cmdarg->toolPath.string()));
 }
 
 }  // namespace FOEDAG
