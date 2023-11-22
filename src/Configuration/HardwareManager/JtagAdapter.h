@@ -32,7 +32,7 @@ namespace FOEDAG {
 class JtagAdapter {
  public:
   virtual std::vector<uint32_t> scan(const Cable &cable) = 0;
-  virtual ~JtagAdapter() {};
+  virtual ~JtagAdapter(){};
 };
 
 }  // namespace FOEDAG
