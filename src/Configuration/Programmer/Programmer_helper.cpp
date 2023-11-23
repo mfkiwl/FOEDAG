@@ -32,6 +32,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "ProgrammerGuiInterface.h"
 #include "Utils/StringUtils.h"
 #include "libusb.h"
+#include "Programmer_errror_code.h"
 
 namespace FOEDAG {
 
@@ -42,7 +43,7 @@ static const std::vector<std::string> programmer_subcmd{
 
 std::string transportTypeToString(TransportType transport) {
   switch (transport) {
-    case TransportType::jtag:
+    case TransportType::JTAG:
       return "jtag";
       // Handle other transport types as needed
   }
@@ -91,17 +92,17 @@ std::vector<std::string> findStringPattern(const std::string& input,
 }
 
 int isCableSupported(const Cable& cable) {
-  bool cableSupported = false;
-  for (auto& supportedCable : supportedCableVendorIdProductId) {
-    if (cable.vendorId == std::get<0>(supportedCable) &&
-        cable.productId == std::get<1>(supportedCable)) {
-      cableSupported = true;
-      break;
-    }
-  }
-  if (!cableSupported) {
-    return ProgrammerErrorCode::CableNotSupported;
-  }
+  // bool cableSupported = false;
+  // for (auto& supportedCable : supportedCableVendorIdProductId) {
+  //   if (cable.vendorId == std::get<0>(supportedCable) &&
+  //       cable.productId == std::get<1>(supportedCable)) {
+  //     cableSupported = true;
+  //     break;
+  //   }
+  // }
+  // if (!cableSupported) {
+  //   return ProgrammerErrorCode::CableNotSupported;
+  // }
   return ProgrammerErrorCode::NoError;
 }
 
@@ -118,50 +119,50 @@ testString =
 "3 auto0.tap              Y     0x20000913 0x00000000     5 0x01  0x03
 ^\d+\s+\w+\.\w+\s+\w+\s+0x[\da-fA-F]+\s+0x[\da-fA-F]+\s+\d+\s+0x[\da-fA-F]+\s+0x[\da-fA-F]+$
 */
-std::vector<TapInfo> extractTapInfoList(const std::string& tapInfoString) {
-  std::vector<TapInfo> tapInfoList;
-  std::istringstream iss(tapInfoString);
-  std::string line;
-  std::string token;
-  size_t pos = std::string::npos;
-  std::vector<std::string> matches;
-  const std::string pattern(
-      R"(\s*(\d+)\s+(\S+)\s+(\S+)\s+(\S+)\s+(\S+)\s+(\d+)\s+(\S+)\s+(\S+)\s*)");
-  while (std::getline(iss, line)) {
-    matches = findStringPattern(line, pattern);
-    if (matches.size() == 0) {
-      continue;
-    }
-    // Replace all the spaces with a single space
-    while ((pos = line.find("  ")) != std::string::npos) {
-      line.replace(pos, 2, " ");
-    }
-    std::istringstream lineStream(line);
-    std::vector<std::string> tokens;
-    while (lineStream >> token) {
-      tokens.push_back(token);
-    }
-    if (tokens.size() == 8) {
-      TapInfo tapInfo;
-      tapInfo.index = CFG_convert_string_to_u64(tokens[0]);
-      tapInfo.tapName = tokens[1];
-      tapInfo.enabled = tokens[2] == "Y" ? true : false;
-      tapInfo.idCode =
-          static_cast<uint32_t>(CFG_convert_string_to_u64(tokens[3], 0, 0));
-      tapInfo.expected =
-          static_cast<uint32_t>(CFG_convert_string_to_u64(tokens[4], 0, 0));
-      tapInfo.irLen =
-          static_cast<uint32_t>(CFG_convert_string_to_u64(tokens[5]));
-      tapInfo.irCap =
-          static_cast<uint32_t>(CFG_convert_string_to_u64(tokens[6], 0, 0));
-      tapInfo.irMask =
-          static_cast<uint32_t>(CFG_convert_string_to_u64(tokens[7], 0, 0));
-      tapInfoList.push_back(tapInfo);
-    }
-  }
+// std::vector<TapInfo> extractTapInfoList(const std::string& tapInfoString) {
+//   std::vector<TapInfo> tapInfoList;
+//   std::istringstream iss(tapInfoString);
+//   std::string line;
+//   std::string token;
+//   size_t pos = std::string::npos;
+//   std::vector<std::string> matches;
+//   const std::string pattern(
+//       R"(\s*(\d+)\s+(\S+)\s+(\S+)\s+(\S+)\s+(\S+)\s+(\d+)\s+(\S+)\s+(\S+)\s*)");
+//   while (std::getline(iss, line)) {
+//     matches = findStringPattern(line, pattern);
+//     if (matches.size() == 0) {
+//       continue;
+//     }
+//     // Replace all the spaces with a single space
+//     while ((pos = line.find("  ")) != std::string::npos) {
+//       line.replace(pos, 2, " ");
+//     }
+//     std::istringstream lineStream(line);
+//     std::vector<std::string> tokens;
+//     while (lineStream >> token) {
+//       tokens.push_back(token);
+//     }
+//     if (tokens.size() == 8) {
+//       TapInfo tapInfo;
+//       tapInfo.index = CFG_convert_string_to_u64(tokens[0]);
+//       tapInfo.tapName = tokens[1];
+//       tapInfo.enabled = tokens[2] == "Y" ? true : false;
+//       tapInfo.idCode =
+//           static_cast<uint32_t>(CFG_convert_string_to_u64(tokens[3], 0, 0));
+//       tapInfo.expected =
+//           static_cast<uint32_t>(CFG_convert_string_to_u64(tokens[4], 0, 0));
+//       tapInfo.irLen =
+//           static_cast<uint32_t>(CFG_convert_string_to_u64(tokens[5]));
+//       tapInfo.irCap =
+//           static_cast<uint32_t>(CFG_convert_string_to_u64(tokens[6], 0, 0));
+//       tapInfo.irMask =
+//           static_cast<uint32_t>(CFG_convert_string_to_u64(tokens[7], 0, 0));
+//       tapInfoList.push_back(tapInfo);
+//     }
+//   }
 
-  return tapInfoList;
-}
+//   return tapInfoList;
+// }
 /*
 This function expecting the string from openOCD gemini list output
 with example below
@@ -172,68 +173,68 @@ Found  0 Gemini               0x20000913   5          16384
 */
 int extractDeviceList(const std::string& devicesString,
                       std::vector<Device>& devices) {
-  devices.clear();
+  // devices.clear();
 
-  std::istringstream iss(devicesString);
-  std::string line;
-  size_t pos = std::string::npos;
-  std::vector<std::string> matches;
-  const std::string pattern(
-      R"(Found\s+(\d+)\s+([\w\s]+)\s+([0-9a-fA-Fx]+)\s+(\d+)\s+(\d+))");
+  // std::istringstream iss(devicesString);
+  // std::string line;
+  // size_t pos = std::string::npos;
+  // std::vector<std::string> matches;
+  // const std::string pattern(
+  //     R"(Found\s+(\d+)\s+([\w\s]+)\s+([0-9a-fA-Fx]+)\s+(\d+)\s+(\d+))");
 
-  while (std::getline(iss, line)) {
-    matches = findStringPattern(line, pattern);
-    if (matches.size() == 0) {
-      continue;
-    }
-    // Replace all the spaces with a single space
-    while ((pos = line.find("  ")) != std::string::npos) {
-      line.replace(pos, 2, " ");
-    }
-    Device device;
-    std::istringstream lineStream(line);
-    std::string firstToken;
-    std::getline(lineStream, firstToken, ' ');  // "found string"
+  // while (std::getline(iss, line)) {
+  //   matches = findStringPattern(line, pattern);
+  //   if (matches.size() == 0) {
+  //     continue;
+  //   }
+  //   // Replace all the spaces with a single space
+  //   while ((pos = line.find("  ")) != std::string::npos) {
+  //     line.replace(pos, 2, " ");
+  //   }
+  //   Device device;
+  //   std::istringstream lineStream(line);
+  //   std::string firstToken;
+  //   std::getline(lineStream, firstToken, ' ');  // "found string"
 
-    std::string indexStr;
-    std::getline(lineStream, indexStr, ' ');  // index string
-    device.index = static_cast<int>(CFG_convert_string_to_u64(indexStr));
+  //   std::string indexStr;
+  //   std::getline(lineStream, indexStr, ' ');  // index string
+  //   device.index = static_cast<int>(CFG_convert_string_to_u64(indexStr));
 
-    std::getline(lineStream >> std::ws, device.name, ' ');  // device name
+  //   std::getline(lineStream >> std::ws, device.name, ' ');  // device name
 
-    std::string idCodeStr;
-    std::getline(lineStream >> std::ws, idCodeStr,
-                 ' ');  // idCode string in hex
-    device.tapInfo.idCode =
-        static_cast<uint32_t>(CFG_convert_string_to_u64(idCodeStr));
+  //   std::string idCodeStr;
+  //   std::getline(lineStream >> std::ws, idCodeStr,
+  //                ' ');  // idCode string in hex
+  //   device.tapInfo.idCode =
+  //       static_cast<uint32_t>(CFG_convert_string_to_u64(idCodeStr));
 
-    std::string irLenStr;
-    std::getline(lineStream >> std::ws, irLenStr, ' ');  // irlength string
-    device.tapInfo.irLen =
-        static_cast<uint32_t>(CFG_convert_string_to_u64(irLenStr));
+  //   std::string irLenStr;
+  //   std::getline(lineStream >> std::ws, irLenStr, ' ');  // irlength string
+  //   device.tapInfo.irLen =
+  //       static_cast<uint32_t>(CFG_convert_string_to_u64(irLenStr));
 
-    std::string flashSizeStr;
-    std::getline(lineStream >> std::ws, flashSizeStr,
-                 ' ');  // flash size string in base 10
-    device.flashSize =
-        static_cast<uint32_t>(CFG_convert_string_to_u64(flashSizeStr));
-    // check flashSize is multiple of 8 and power of 2
-    if (!((device.flashSize % 8 == 0) && (device.flashSize > 0) &&
-          ((device.flashSize & (device.flashSize - 1)) == 0))) {
-      return ProgrammerErrorCode::InvalidFlashSize;
-    }
-    for (const TapInfo& tap : supportedTAP) {
-      if (tap.idCode == device.tapInfo.idCode) {
-        device.tapInfo.enabled = tap.enabled;
-        device.tapInfo.expected = tap.expected;
-        device.tapInfo.irCap = tap.irCap;
-        device.tapInfo.irMask = tap.irMask;
-        device.tapInfo.irLen = tap.irLen;
-        device.tapInfo.tapName = tap.tapName;
-        devices.push_back(device);
-      }
-    }
-  }
+  //   std::string flashSizeStr;
+  //   std::getline(lineStream >> std::ws, flashSizeStr,
+  //                ' ');  // flash size string in base 10
+  //   device.flashSize =
+  //       static_cast<uint32_t>(CFG_convert_string_to_u64(flashSizeStr));
+  //   // check flashSize is multiple of 8 and power of 2
+  //   if (!((device.flashSize % 8 == 0) && (device.flashSize > 0) &&
+  //         ((device.flashSize & (device.flashSize - 1)) == 0))) {
+  //     return ProgrammerErrorCode::InvalidFlashSize;
+  //   }
+  //   for (const TapInfo& tap : supportedTAP) {
+  //     if (tap.idCode == device.tapInfo.idCode) {
+  //       device.tapInfo.enabled = tap.enabled;
+  //       device.tapInfo.expected = tap.expected;
+  //       device.tapInfo.irCap = tap.irCap;
+  //       device.tapInfo.irMask = tap.irMask;
+  //       device.tapInfo.irLen = tap.irLen;
+  //       device.tapInfo.tapName = tap.tapName;
+  //       devices.push_back(device);
+  //     }
+  //   }
+  // }
 
   return ProgrammerErrorCode::NoError;
 }
@@ -278,30 +279,30 @@ std::stringstream buildFpgaCableStringStream(const Cable& cable) {
   std::stringstream ss;
   ss << std::hex << std::showbase;
   ss << " -c \"adapter driver ftdi\"";
-  if (!cable.serialNumber.empty()) {
-    ss << " -c \"adapter serial " << cable.serialNumber << "\"";
-  }
-  ss << " -c \"ftdi vid_pid " << cable.vendorId << " " << cable.productId
-     << "\""
-     << " -c \"ftdi layout_init 0x0c08 0x0f1b\"";
-  ss << std::dec << std::noshowbase;
-  ss << " -c \"adapter speed " << cable.speed << "\""
-     << " -c \"transport select " << transportTypeToString(cable.transport)
-     << "\"";
+  // if (!cable.serial_number.empty()) {
+  //   ss << " -c \"adapter serial " << cable.serial_number << "\"";
+  // }
+  // ss << " -c \"ftdi vid_pid " << cable.vendorId << " " << cable.productId
+  //    << "\""
+  //    << " -c \"ftdi layout_init 0x0c08 0x0f1b\"";
+  // ss << std::dec << std::noshowbase;
+  // ss << " -c \"adapter speed " << cable.speed << "\""
+  //    << " -c \"transport select " << transportTypeToString(cable.transport)
+  //    << "\"";
   return ss;
 }
 
 std::stringstream buildFpgaTargetStringStream(const Device& device) {
   std::stringstream ss;
-  ss << " -c \"jtag newtap " << device.name << device.index << " tap -irlen "
-     << device.tapInfo.irLen << " -expected-id 0x" << std::hex
-     << device.tapInfo.expected << "\"";
+  // ss << " -c \"jtag newtap " << device.name << device.index << " tap -irlen "
+  //    << device.tap.irLen << " -expected-id 0x" << std::hex
+  //    << device.tap.expected << "\"";
 
-  ss << std::dec;
-  ss << " -c \"target create " << device.name << device.index
-     << " riscv -endian little -chain-position " << device.name << device.index
-     << ".tap\"";
-  ss << " -c \"pld device gemini " << device.name << device.index << "\"";
+  // ss << std::dec;
+  // ss << " -c \"target create " << device.name << device.index
+  //    << " riscv -endian little -chain-position " << device.name << device.index
+  //    << ".tap\"";
+  // ss << " -c \"pld device gemini " << device.name << device.index << "\"";
   return ss;
 }
 
@@ -339,34 +340,35 @@ std::string buildScanChainCommand(const Cable& cable) {
 
 std::string buildListDeviceCommand(const Cable& cable,
                                    const std::vector<TapInfo>& foundTapList) {
-  if (foundTapList.size() == 0) {
-    return std::string{};
-  }
-  std::stringstream cmd;
-  cmd = buildFpgaCableStringStream(cable);
+  return std::string();
+  // if (foundTapList.size() == 0) {
+  //   return std::string{};
+  // }
+  // std::stringstream cmd;
+  // cmd = buildFpgaCableStringStream(cable);
 
-  for (const TapInfo& tap : foundTapList) {
-    cmd << " -c \"jtag newtap " << tap.tapName << tap.index << " tap -irlen "
-        << tap.irLen << " -expected-id 0x" << std::hex << tap.expected << "\"";
+  // for (const Tap& tap : foundTapList) {
+  //   cmd << " -c \"jtag newtap " << tap.tapName << tap.index << " tap -irlen "
+  //       << tap.irLen << " -expected-id 0x" << std::hex << tap.expected << "\"";
 
-    cmd << " -c \"target create " << tap.tapName << tap.index
-        << " riscv -endian little -chain-position " << tap.tapName << tap.index
-        << ".tap\"";
-  }
+  //   cmd << " -c \"target create " << tap.tapName << tap.index
+  //       << " riscv -endian little -chain-position " << tap.tapName << tap.index
+  //       << ".tap\"";
+  // }
 
-  if (foundTapList.size() >= 1) {
-    cmd << " -c \"pld device gemini ";
-    for (size_t i = 0; i < foundTapList.size(); i++) {
-      cmd << foundTapList[i].tapName << foundTapList[i].index;
-      if (i != foundTapList.size() - 1) {
-        cmd << " ";
-      }
-    }
-    cmd << "\"";
-  }
+  // if (foundTapList.size() >= 1) {
+  //   cmd << " -c \"pld device gemini ";
+  //   for (size_t i = 0; i < foundTapList.size(); i++) {
+  //     cmd << foundTapList[i].tapName << foundTapList[i].index;
+  //     if (i != foundTapList.size() - 1) {
+  //       cmd << " ";
+  //     }
+  //   }
+  //   cmd << "\"";
+  // }
 
-  cmd << " -c \"init\" -c \"gemini list\" -l /dev/stdout -c \"exit\"";
-  return cmd.str();
+  // cmd << " -c \"init\" -c \"gemini list\" -l /dev/stdout -c \"exit\"";
+  // return cmd.str();
 }
 
 std::string buildFpgaProgramCommand(const Cable& cable, const Device& device,

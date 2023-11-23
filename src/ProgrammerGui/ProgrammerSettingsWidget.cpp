@@ -57,13 +57,19 @@ ProgrammerSettingsWidget::ProgrammerSettingsWidget(
         new QTableWidgetItem{QString::fromStdString(deviceInfo->dev.name)});
     ui->tableWidgetDevices->setItem(
         rowIndex, 1,
-        new QTableWidgetItem{ToHexString(deviceInfo->dev.tapInfo.idCode)});
-    ui->tableWidgetDevices->setItem(
+        new QTableWidgetItem{ToHexString(deviceInfo->dev.tap.idcode)});
+    // ui->tableWidgetDevices->setItem(
+    //     rowIndex, 2,
+    //     new QTableWidgetItem{ToHexString(deviceInfo->dev.tap.irMask)});
+        ui->tableWidgetDevices->setItem(
         rowIndex, 2,
-        new QTableWidgetItem{ToHexString(deviceInfo->dev.tapInfo.irMask)});
-    ui->tableWidgetDevices->setItem(
+        new QTableWidgetItem{"dummy irmask"});
+    // ui->tableWidgetDevices->setItem(
+    //     rowIndex, 3,
+    //     new QTableWidgetItem{QString::number(deviceInfo->dev.tap.irLen)});
+        ui->tableWidgetDevices->setItem(
         rowIndex, 3,
-        new QTableWidgetItem{QString::number(deviceInfo->dev.tapInfo.irLen)});
+        new QTableWidgetItem{"dummy irlen"});
   }
 }
 

@@ -26,10 +26,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <vector>
 
 #include "Cable.h"
-
+namespace FOEDAG {
 class JtagAdapter {
  public:
   virtual std::vector<uint32_t> scan(const Cable &cable) = 0;
 };
-
+}
 #endif  //__JTAGADAPTER_H__
