@@ -67,7 +67,7 @@ std::vector<uint32_t> OpenocdAdapter::scan(const Cable &cable) {
   return idcode_array;
 }
 
-int OpenocdAdapter::program_fpga(const Device &device,
+int OpenocdAdapter::program_fpga(const Device &device, DeviceType device_type,
                                  const std::vector<Tap> &taplist,
                                  std::string bitfile, std::atomic<bool> &stop,
                                  std::function<void(double)> output_callback) {
@@ -77,7 +77,6 @@ int OpenocdAdapter::program_fpga(const Device &device,
   CFG_ASSERT(std::filesystem::exists(m_openocd));
   CFG_ASSERT(std::filesystem::exists(bitfile));
   CFG_ASSERT(output_callback != nullptr);
-  CFG_ASSERT(device.type == GEMINI || device.type == VIRGO);
 
   ss << " -l /dev/stdout"  //<-- not windows friendly
      << " -d2";
@@ -86,7 +85,7 @@ int OpenocdAdapter::program_fpga(const Device &device,
      << build_target_config(device);
 
   std::string cmd = "gemini load 1 fpga " + bitfile + " -p 1 -d " +
-                    (device.type == GEMINI ? "gemini" : "virgo");
+                    (device_type == VIRGO ? "virgo" : "gemini");
 
   ss << " -c \"init\"";
   ss << " -c \"" << cmd << "\"";
@@ -103,7 +102,10 @@ int OpenocdAdapter::program_fpga(const Device &device,
         CFG_POST_MSG("[line %d: %s]", ++count, line.c_str());
       });
 
-  CFG_ASSERT_MSG(res == 0, "cmdexec error: %s", output.c_str());
+  if (res != 0) {
+    CFG_POST_ERR("cmdexec error: %s", output.c_str());
+    return -1;
+  }
 
   return 0;
 }
@@ -234,7 +236,7 @@ void test_hwmgr(CFGCommon_ARG *cmdarg, std::string bitfile, std::string cable,
   }
 
   error_code = adapter.program_fpga(
-      device, taplist, bitfile, stop, [](double percentage) {
+      device, VIRGO, taplist, bitfile, stop, [](double percentage) {
         CFG_post_msg(CFG_print("Progress...%2.2f%%", percentage),
                      "INFO: ", false);
       });

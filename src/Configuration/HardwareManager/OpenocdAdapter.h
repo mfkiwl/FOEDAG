@@ -37,8 +37,9 @@ class OpenocdAdapter : public JtagAdapter {
   OpenocdAdapter(std::string openocd);
   virtual ~OpenocdAdapter();
   virtual std::vector<uint32_t> scan(const Cable &cable);
-  int program_fpga(const Device &device, const std::vector<Tap> &taplist,
-                   std::string bitfile, std::atomic<bool> &stop,
+  int program_fpga(const Device &device, DeviceType device_type,
+                   const std::vector<Tap> &taplist, std::string bitfile,
+                   std::atomic<bool> &stop,
                    std::function<void(double)> progress_callback);
 
  protected:
