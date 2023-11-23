@@ -30,7 +30,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #define HM_USB_DESC_LENGTH (256)
 #define HM_DEFAULT_CABLE_SPEED_KHZ (1000)
-
+namespace FOEDAG {
 const std::vector<HardwareManager_CABLE_INFO> HardwareManager::m_cable_db = {
     {"RsFtdi", FTDI, 0x0403, 0x6011},
     {"RsFtdi", FTDI, 0x0403, 0x6010},
@@ -270,4 +270,5 @@ int HardwareManager::program_fpga(Device device, std::string bitstream_filepath,
   }
 
   return 1;
+}
 }

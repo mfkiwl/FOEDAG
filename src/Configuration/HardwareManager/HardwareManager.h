@@ -31,6 +31,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "JtagAdapter.h"
 #include "Tap.h"
 
+namespace FOEDAG {
+  
 using progress_func_type = std::function<void(double)>;
 
 struct HardwareManager_CABLE_INFO {
@@ -75,4 +77,5 @@ class HardwareManager {
   JtagAdapter *m_adapter;
 };
 
+}
 #endif  //__HARDWAREMANAGER_H__

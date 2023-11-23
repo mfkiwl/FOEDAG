@@ -27,15 +27,16 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "Cable.h"
 #include "Tap.h"
-
+namespace FOEDAG {
 enum DeviceType { GEMINI, OCLA, OEM /* for all non-RS devices */ };
 
 struct Device {
   uint32_t index;
   std::string name;
+  int flashSize;
   DeviceType type;
   Cable cable;
   Tap tap;
 };
-
+}  // namespace FOEDAG
 #endif  // __DEVICE_H__

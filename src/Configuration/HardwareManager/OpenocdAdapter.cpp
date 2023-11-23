@@ -26,7 +26,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <sstream>
 
 #include "Configuration/CFGCommon/CFGCommon.h"
-
+namespace FOEDAG {
 std::vector<uint32_t> OpenocdAdapter::scan(const Cable &cable) {
   std::vector<uint32_t> idcode_array;
   std::string line;
@@ -57,6 +57,19 @@ std::vector<uint32_t> OpenocdAdapter::scan(const Cable &cable) {
   }
 
   return idcode_array;
+}
+
+int OpenocdAdapter::pld(const Device &device, std::string bitfile, std::atomic<bool>& stop,
+                                  progress_func_type progress_callback){
+  return 0;
+}
+int OpenocdAdapter::otp(const Device &device, std::string bitfile, std::atomic<bool>& stop,
+                                  progress_func_type progress_callback){
+  return 0;
+}
+int OpenocdAdapter::flash(const Device &device, std::string bitfile, std::atomic<bool>& stop,
+                                  progress_func_type progress_callback){
+  return 0;
 }
 
 int OpenocdAdapter::execute(const Cable &cable, std::string &output) {
@@ -111,3 +124,5 @@ std::string OpenocdAdapter::convert_transport_to_string(TransportType transport,
   }
   return defval;
 }
+
+}  // namespace
