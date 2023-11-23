@@ -30,8 +30,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace FOEDAG {
 
-OpenocdAdapter::OpenocdAdapter(std::string openocd_filepath)
-    : m_openocd_filepath(openocd_filepath) {}
+OpenocdAdapter::OpenocdAdapter(std::string openocd) : m_openocd(openocd) {}
 
 OpenocdAdapter::~OpenocdAdapter() {}
 
@@ -68,12 +67,53 @@ std::vector<uint32_t> OpenocdAdapter::scan(const Cable &cable) {
   return idcode_array;
 }
 
+int OpenocdAdapter::program_fpga(const Device &device,
+                                 const std::vector<Tap> &taplist,
+                                 std::string bitfile, std::atomic<bool> &stop,
+                                 std::function<void(double)> output_callback) {
+  std::ostringstream ss;
+  std::string output;
+
+  CFG_ASSERT(std::filesystem::exists(m_openocd));
+  CFG_ASSERT(std::filesystem::exists(bitfile));
+  CFG_ASSERT(output_callback != nullptr);
+  CFG_ASSERT(device.type == GEMINI || device.type == VIRGO);
+
+  ss << " -l /dev/stdout"  //<-- not windows friendly
+     << " -d2";
+
+  ss << build_cable_config(device.cable) << build_tap_config(taplist)
+     << build_target_config(device);
+
+  std::string cmd = "gemini load 1 fpga " + bitfile + " -p 1 -d " +
+                    (device.type == GEMINI ? "gemini" : "virgo");
+
+  ss << " -c \"init\"";
+  ss << " -c \"" << cmd << "\"";
+  ss << " -c \"exit\"";
+
+  CFG_POST_MSG("[cmd: %d]", ss.str().c_str());
+
+  int count = 0;
+
+  // run the command
+  int res = CFG_execute_cmd_with_callback(
+      "OPENOCD_DEBUG_LEVEL=-3 " + m_openocd + ss.str(), output, nullptr,
+      std::regex{}, stop, nullptr, [&count](const std::string &line) {
+        CFG_POST_MSG("[line %d: %s]", ++count, line.c_str());
+      });
+
+  CFG_ASSERT_MSG(res == 0, "cmdexec error: %s", output.c_str());
+
+  return 0;
+}
+
 int OpenocdAdapter::execute(const Cable &cable, std::string cmd,
                             std::string &output) {
   std::atomic<bool> stop = false;
   std::ostringstream ss;
 
-  CFG_ASSERT(std::filesystem::exists(m_openocd_filepath));
+  CFG_ASSERT(std::filesystem::exists(m_openocd));
 
   ss << " -l /dev/stdout"  //<-- not windows friendly
      << " -d2";
@@ -83,9 +123,8 @@ int OpenocdAdapter::execute(const Cable &cable, std::string cmd,
   ss << " -c \"exit\"";
 
   // run the command
-  int res =
-      CFG_execute_cmd("OPENOCD_DEBUG_LEVEL=-3 " + m_openocd_filepath + ss.str(),
-                      output, nullptr, stop);
+  int res = CFG_execute_cmd("OPENOCD_DEBUG_LEVEL=-3 " + m_openocd + ss.str(),
+                            output, nullptr, stop);
   return res;
 }
 
@@ -126,6 +165,41 @@ std::string OpenocdAdapter::build_cable_config(const Cable &cable) {
   return ss.str();
 }
 
+std::string OpenocdAdapter::build_tap_config(const std::vector<Tap> &taplist) {
+  std::ostringstream ss;
+
+  // setup tap configuration
+  if (!taplist.empty()) {
+    ss << " -c \"";
+    for (const auto &tap : taplist) {
+      ss << "jtag newtap tap" << tap.index << " tap"
+         << " -irlen " << tap.irlength << " -expected-id " << std::hex
+         << std::showbase << tap.idcode << ";" << std::noshowbase << std::dec;
+    }
+    ss << "\"";
+  }
+
+  return ss.str();
+}
+
+std::string OpenocdAdapter::build_target_config(const Device &device) {
+  std::ostringstream ss;
+
+  // setup target configuration
+  if (device.type == GEMINI || device.type == VIRGO) {
+    ss << " -c \"target create gemini" << device.index
+       << " riscv -endian little -chain-position tap" << device.tap.index
+       << ".tap;\""
+       // add pld driver
+       << " -c \"pld device gemini gemini" << device.index << "\"";
+  } else if (device.type == OCLA) {
+    ss << " -c \"target create gemini" << device.index
+       << " testee -chain-position tap" << device.tap.index << ".tap;\"";
+  }
+
+  return ss.str();
+}
+
 std::unique_ptr<HardwareManager> HardwareManager::create_instance(
     CFGCommon_ARG *cmdarg) {
   return std::make_unique<HardwareManager>(
@@ -135,14 +209,39 @@ std::unique_ptr<HardwareManager> HardwareManager::create_instance(
 }  // namespace FOEDAG
 
 /* for testing purpose */
-void test_hwmgr(CFGCommon_ARG *cmdarg) {
+void test_hwmgr(CFGCommon_ARG *cmdarg, std::string bitfile, std::string cable,
+                uint32_t device_index) {
   using namespace FOEDAG;
 
   CFG_POST_MSG("I m here!");
 
   auto hardware_manager = HardwareManager::create_instance(cmdarg);
-  auto cables = hardware_manager->get_cables();
-  for (auto &cable : cables) {
-    CFG_POST_MSG("CY: %s", cable.name.c_str());
+  OpenocdAdapter adapter{cmdarg->toolPath};
+  std::atomic<bool> stop = false;
+  std::vector<Tap> taplist{};
+  Device device{};
+  int error_code = 0;
+
+  if (!hardware_manager->is_cable_exists(cable, true)) {
+    CFG_POST_ERR("Cable '%s' not found", cable.c_str());
+    return;
+  }
+
+  if (!hardware_manager->find_device(cable, device_index, device, taplist,
+                                     true)) {
+    CFG_POST_ERR("Device %d not found", device_index);
+    return;
+  }
+
+  error_code = adapter.program_fpga(
+      device, taplist, bitfile, stop, [](double percentage) {
+        CFG_post_msg(CFG_print("Progress...%2.2f%%", percentage),
+                     "INFO: ", false);
+      });
+  if (!error_code) {
+    CFG_POST_MSG("Programmed '%s' successfully.", bitfile.c_str());
+  } else {
+    CFG_POST_MSG("Failed to program '%s.'. Error code %d.", bitfile.c_str(),
+                 error_code);
   }
 }

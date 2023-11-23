@@ -27,22 +27,28 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <string>
 #include <vector>
 
+#include "Device.h"
 #include "JtagAdapter.h"
 
 namespace FOEDAG {
 
 class OpenocdAdapter : public JtagAdapter {
  public:
-  OpenocdAdapter(std::string openocd_filepath);
+  OpenocdAdapter(std::string openocd);
   virtual ~OpenocdAdapter();
   virtual std::vector<uint32_t> scan(const Cable &cable);
+  int program_fpga(const Device &device, const std::vector<Tap> &taplist,
+                   std::string bitfile, std::atomic<bool> &stop,
+                   std::function<void(double)> progress_callback);
 
  protected:
   int execute(const Cable &cable, std::string cmd, std::string &output);
   std::string convert_transport_to_string(TransportType transport,
                                           std::string defval = "jtag");
   std::string build_cable_config(const Cable &cable);
-  std::string m_openocd_filepath;
+  std::string build_tap_config(const std::vector<Tap> &taplist);
+  std::string build_target_config(const Device &device);
+  std::string m_openocd;
 };
 
 }  // namespace FOEDAG

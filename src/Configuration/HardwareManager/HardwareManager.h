@@ -36,8 +36,6 @@ struct CFGCommon_ARG;
 
 namespace FOEDAG {
 
-using progress_func_type = std::function<void(double)>;
-
 struct HardwareManager_CABLE_INFO {
   std::string name;
   CableType type;
@@ -70,12 +68,6 @@ class HardwareManager {
   bool find_device(std::string cable_name, uint32_t device_index,
                    Device &device, std::vector<Tap> &taplist,
                    bool numeric_name_as_index = false);
-
-  // helper to issue openocd command to program fpga
-  // This should be in Programmer application class
-  int program_fpga(Device device, std::string bitstream_filepath,
-                   std::atomic<bool> &stop,
-                   progress_func_type progress_callback = nullptr);
 
   // static helper to instantiate hardware manager with specific
   // JtapAdapter implementation.
