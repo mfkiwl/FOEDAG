@@ -329,7 +329,8 @@ void test_hwmgr(CFGCommon_ARG *cmdarg, std::string bitfile, std::string cable,
   if (!error_code) {
     CFG_POST_MSG("Programmed '%s' successfully.", bitfile.c_str());
   } else {
-    CFG_POST_MSG("Failed to program '%s'. Error code %d.", bitfile.c_str(),
+    CFG_POST_ERR("Failed to program '%s'. Error code %d.", bitfile.c_str(),
                  error_code);
+    CFG_post_err(adapter.get_last_output(), false);
   }
 }
