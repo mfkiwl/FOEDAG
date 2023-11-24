@@ -67,16 +67,62 @@ std::vector<uint32_t> OpenocdAdapter::scan(const Cable &cable) {
   return idcode_array;
 }
 
+bool OpenocdAdapter::check_regex(std::string str, std::string pattern,
+                                 std::vector<std::string> &output) {
+  std::smatch m;
+  int i = 0;
+
+  if (std::regex_search(str, m, std::regex{pattern, std::regex::icase})) {
+    output.clear();
+    for (auto &s : m) {
+      if (i++ > 0) {
+        output.push_back(s);
+      }
+    }
+    return true;
+  }
+
+  return false;
+}
+
+CommandOutputType OpenocdAdapter::check_output(
+    std::string str, std::vector<std::string> &output) {
+  static std::map<CommandOutputType, std::string> patterns = {
+      {CMD_PROGRESS, R"(Progress +(\d+.\d+)% +\((\d+)\/(\d+) +bytes\))"},
+      {CMD_ERROR, R"(\[RS\] Command error (\d+)\.)"},
+      {CMD_TIMEOUT, R"(\[RS\] Timed out waiting for task to complete\.)"},
+      {CBUFFER_TIMEOUT, R"(\[RS\] Circular buffer timed out\.)"},
+      {UNKNOWN_FIRMWARE, R"(\[RS\] Unknown firmware)"},
+      {CONFIG_ERROR,
+       R"(\[RS\] FPGA fabric configuration error \(cfg_done *= *(\d+), *cfg_error *= *(\d+)\))"},
+      {CONFIG_SUCCESS, R"(\[RS\] Configured FPGA fabric successfully)"},
+      {INVALID_BITSTREAM,
+       R"(\[RS\] Unsupported UBI header version ([0-9a-f]+))"},
+  };
+
+  for (auto const &[key, pat] : patterns) {
+    if (check_regex(str, pat, output)) {
+      return key;
+    }
+  }
+
+  return NOT_OUTPUT;
+}
+
 int OpenocdAdapter::program_fpga(const Device &device, DeviceType device_type,
                                  const std::vector<Tap> &taplist,
                                  std::string bitfile, std::atomic<bool> &stop,
-                                 std::function<void(double)> output_callback) {
+                                 std::function<void(float)> progress_callback) {
   std::ostringstream ss;
-  std::string output;
+  int cmd_err = 0;
+  int cmd_timeout = 0;
+  int cbuffer_timeout = 0;
+  int unknown_fw = 0;
+  int cfg_success = 0;
+  int cfg_err = 0;
 
   CFG_ASSERT(std::filesystem::exists(m_openocd));
-  CFG_ASSERT(std::filesystem::exists(bitfile));
-  CFG_ASSERT(output_callback != nullptr);
+  CFG_ASSERT(progress_callback != nullptr);
 
   ss << " -l /dev/stdout"  //<-- not windows friendly
      << " -d2";
@@ -91,23 +137,56 @@ int OpenocdAdapter::program_fpga(const Device &device, DeviceType device_type,
   ss << " -c \"" << cmd << "\"";
   ss << " -c \"exit\"";
 
-  CFG_POST_MSG("[cmd: %d]", ss.str().c_str());
-
-  int count = 0;
-
   // run the command
   int res = CFG_execute_cmd_with_callback(
-      "OPENOCD_DEBUG_LEVEL=-3 " + m_openocd + ss.str(), output, nullptr,
-      std::regex{}, stop, nullptr, [&count](const std::string &line) {
-        CFG_POST_MSG("[line %d: %s]", ++count, line.c_str());
+      "OPENOCD_DEBUG_LEVEL=-3 " + m_openocd + ss.str(), m_last_output, nullptr,
+      std::regex{}, stop, nullptr, [&](const std::string &line) {
+        std::vector<std::string> data{};
+        switch (check_output(line, data)) {
+          case CMD_PROGRESS: {
+            float percent = std::strtof(data[0].c_str(), nullptr);
+            progress_callback(percent < 100 ? percent : 99.99f);
+            break;
+          }
+          case CMD_ERROR:
+            cmd_err = std::stoi(data[0]);
+            break;
+          case CMD_TIMEOUT:
+            cmd_timeout = 1;
+            break;
+          case CBUFFER_TIMEOUT:
+            cbuffer_timeout = 1;
+            break;
+          case CONFIG_ERROR:
+            cfg_err = 1;
+            break;
+          case CONFIG_SUCCESS:
+            progress_callback(100.0f);
+            cfg_success = 1;
+            break;
+          case UNKNOWN_FIRMWARE:
+            unknown_fw = 1;
+            break;
+          default:
+            break;
+        }
       });
 
+  if (cmd_err) return cmd_err;
+
+  if (cfg_err) return -5;
+
+  if (cmd_timeout) return -4;
+
+  if (cbuffer_timeout) return -3;
+
+  if (unknown_fw) return -2;
+
   if (res != 0) {
-    CFG_POST_ERR("cmdexec error: %s", output.c_str());
-    return -1;
+    return -1;  // general cmdline error
   }
 
-  return 0;
+  return 0;  // no error
 }
 
 int OpenocdAdapter::execute(const Cable &cable, std::string cmd,
@@ -236,14 +315,14 @@ void test_hwmgr(CFGCommon_ARG *cmdarg, std::string bitfile, std::string cable,
   }
 
   error_code = adapter.program_fpga(
-      device, VIRGO, taplist, bitfile, stop, [](double percentage) {
-        CFG_post_msg(CFG_print("Progress...%2.2f%%", percentage),
+      device, VIRGO, taplist, bitfile, stop, [](float percentage) {
+        CFG_post_msg(CFG_print("Progress....%6.2f%%", percentage),
                      "INFO: ", false);
       });
   if (!error_code) {
     CFG_POST_MSG("Programmed '%s' successfully.", bitfile.c_str());
   } else {
-    CFG_POST_MSG("Failed to program '%s.'. Error code %d.", bitfile.c_str(),
+    CFG_POST_MSG("Failed to program '%s'. Error code %d.", bitfile.c_str(),
                  error_code);
   }
 }

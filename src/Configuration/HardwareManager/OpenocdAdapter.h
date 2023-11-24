@@ -32,6 +32,18 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace FOEDAG {
 
+enum CommandOutputType {
+  NOT_OUTPUT = 0,
+  CMD_PROGRESS,
+  CMD_ERROR,
+  CMD_TIMEOUT,
+  CBUFFER_TIMEOUT,
+  CONFIG_ERROR,
+  CONFIG_SUCCESS,
+  UNKNOWN_FIRMWARE,
+  INVALID_BITSTREAM,
+};
+
 class OpenocdAdapter : public JtagAdapter {
  public:
   OpenocdAdapter(std::string openocd);
@@ -40,7 +52,12 @@ class OpenocdAdapter : public JtagAdapter {
   int program_fpga(const Device &device, DeviceType device_type,
                    const std::vector<Tap> &taplist, std::string bitfile,
                    std::atomic<bool> &stop,
-                   std::function<void(double)> progress_callback);
+                   std::function<void(float)> progress_callback);
+  static CommandOutputType check_output(std::string str,
+                                        std::vector<std::string> &output);
+  static bool check_regex(std::string str, std::string pattern,
+                          std::vector<std::string> &output);
+  std::string get_last_output() { return m_last_output; };
 
  protected:
   int execute(const Cable &cable, std::string cmd, std::string &output);
@@ -50,6 +67,7 @@ class OpenocdAdapter : public JtagAdapter {
   std::string build_tap_config(const std::vector<Tap> &taplist);
   std::string build_target_config(const Device &device);
   std::string m_openocd;
+  std::string m_last_output;
 };
 
 }  // namespace FOEDAG
