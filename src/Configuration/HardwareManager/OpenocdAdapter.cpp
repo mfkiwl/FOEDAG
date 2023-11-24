@@ -177,8 +177,6 @@ int OpenocdAdapter::program_fpga(const Device &device, DeviceType device_type,
         }
       });
 
-  if (cmd_err) return cmd_err;
-
   if (fsbl_boot_failure) return -6;
 
   if (cfg_err) return -5;
@@ -188,6 +186,8 @@ int OpenocdAdapter::program_fpga(const Device &device, DeviceType device_type,
   if (cbuffer_timeout) return -3;
 
   if (unknown_fw) return -2;
+
+  if (cmd_err) return cmd_err;
 
   if (res != 0) {
     return -1;  // general cmdline error
