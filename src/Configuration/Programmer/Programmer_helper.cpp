@@ -489,6 +489,10 @@ void processDeviceList(const Cable& cable,
 }
 
 void printCableList(const std::vector<Cable>& cableList, bool verbose) {
+  if (cableList.size() == 0) {
+    CFG_POST_MSG("  No cables is connected.");
+    return;
+  }
   if (verbose) {
     CFG_POST_MSG("Cable            ");
     CFG_POST_MSG("-----------------");
@@ -500,16 +504,15 @@ void printCableList(const std::vector<Cable>& cableList, bool verbose) {
 
 void printDeviceList(const Cable& cable, const std::vector<Device>& deviceList,
                      bool verbose) {
+  if (deviceList.size() == 0) {
+    CFG_POST_MSG("  No device is detected.");
+    return;
+  }
   if (verbose) {
     CFG_POST_MSG(
         "Cable                       | Device            | Flash Size");
     CFG_POST_MSG(
         "-------------------------------------------------------------");
-
-    if (deviceList.size() == 0) {
-      CFG_POST_MSG("  No device detected.");
-      return;
-    }
     for (size_t i = 0; i < deviceList.size(); i++) {
       std::ostringstream formattedOutput;
       std::string cable_name =
