@@ -89,9 +89,10 @@ CommandOutputType OpenocdAdapter::check_output(
     std::string str, std::vector<std::string> &output) {
   static std::map<CommandOutputType, std::string> patterns = {
       {CMD_PROGRESS, R"(Progress +(\d+.\d+)% +\((\d+)\/(\d+) +bytes\))"},
-      {CMD_ERROR, R"(\[RS\] Command error (\d+)\.)"},
+      {CMD_ERROR, R"(\[RS\] Command error (\d+)\.*)"},
       {CMD_TIMEOUT, R"(\[RS\] Timed out waiting for task to complete\.)"},
       {CBUFFER_TIMEOUT, R"(\[RS\] Circular buffer timed out\.)"},
+      {FSBL_BOOT_FAILURE, R"(\[RS\] Failed to load FSBL firmware)"},
       {UNKNOWN_FIRMWARE, R"(\[RS\] Unknown firmware)"},
       {CONFIG_ERROR,
        R"(\[RS\] FPGA fabric configuration error \(cfg_done *= *(\d+), *cfg_error *= *(\d+)\))"},
@@ -120,6 +121,7 @@ int OpenocdAdapter::program_fpga(const Device &device, DeviceType device_type,
   int unknown_fw = 0;
   int cfg_success = 0;
   int cfg_err = 0;
+  int fsbl_boot_failure = 0;
 
   CFG_ASSERT(std::filesystem::exists(m_openocd));
   CFG_ASSERT(progress_callback != nullptr);
@@ -167,12 +169,17 @@ int OpenocdAdapter::program_fpga(const Device &device, DeviceType device_type,
           case UNKNOWN_FIRMWARE:
             unknown_fw = 1;
             break;
+          case FSBL_BOOT_FAILURE:
+            fsbl_boot_failure = 1;
+            break;
           default:
             break;
         }
       });
 
   if (cmd_err) return cmd_err;
+
+  if (fsbl_boot_failure) return -6;
 
   if (cfg_err) return -5;
 
