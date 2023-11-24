@@ -48,6 +48,7 @@ struct HardwareManager_DEVICE_INFO {
   uint32_t irlength;
   uint32_t irmask;
   DeviceType type;
+  uint32_t flashsize;
 };
 
 class HardwareManager {
