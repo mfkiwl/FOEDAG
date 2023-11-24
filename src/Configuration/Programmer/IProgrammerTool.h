@@ -2,9 +2,8 @@
 #ifndef IPROGRAMMERTOOL_H
 #define IPROGRAMMERTOOL_H
 
-#include <string>
 #include <atomic>
-
+#include <string>
 
 namespace FOEDAG {
 
@@ -12,15 +11,18 @@ struct Device;
 enum class ProgramFlashOperation : uint32_t;
 
 class IProgrammerTool {
-public:
+ public:
   virtual ~IProgrammerTool() = default;
 
-  virtual int ProgrammerFPGA(const Device& device, const std::string& bitfile, std::atomic<bool>& stop) = 0;
-  virtual int ProgramFlash(const Device& device, const std::string& bitfile, ProgramFlashOperation operations, std::atomic<bool>& stop) = 0;
-  virtual int ProgramOTP(const Device& device, const std::string& bitfile, std::atomic<bool>& stop) = 0;
+  virtual int ProgrammerFPGA(const Device& device, const std::string& bitfile,
+                             std::atomic<bool>& stop) = 0;
+  virtual int ProgramFlash(const Device& device, const std::string& bitfile,
+                           ProgramFlashOperation operations,
+                           std::atomic<bool>& stop) = 0;
+  virtual int ProgramOTP(const Device& device, const std::string& bitfile,
+                         std::atomic<bool>& stop) = 0;
 };
 
-} // namespace FOEDAG
+}  // namespace FOEDAG
 
-
-#endif // IPROGRAMMERTOOL_H
+#endif  // IPROGRAMMERTOOL_H

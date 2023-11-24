@@ -1,4 +1,5 @@
 #include "ProgrammerTool.h"
+
 #include "Configuration/CFGCommon/CFGCommon.h"
 #include "Programmer_errror_code.h"
 
@@ -25,10 +26,12 @@ ProgrammerTool::ProgrammerTool(JtagAdapter* adapter) : m_adapter(adapter) {
 }
 
 ProgrammerTool::~ProgrammerTool() {
-    // Clean-up code if needed
+  // Clean-up code if needed
 }
 
-int ProgrammerTool::ProgrammerFPGA(const Device& device, const std::string& bitfile, std::atomic<bool>& stop) {
+int ProgrammerTool::ProgrammerFPGA(const Device& device,
+                                   const std::string& bitfile,
+                                   std::atomic<bool>& stop) {
   // Implementation for programming FPGA
   int status = ProgrammerErrorCode::NoError;
   std::error_code ec;
@@ -36,18 +39,21 @@ int ProgrammerTool::ProgrammerFPGA(const Device& device, const std::string& bitf
   if (!std::filesystem::exists(bitfile, ec)) {
     return ProgrammerErrorCode::BitfileNotFound;
   }
-  return status; // Return appropriate status
+  return status;  // Return appropriate status
 }
 
-int ProgrammerTool::ProgramFlash(const Device& device, const std::string& bitfile, ProgramFlashOperation operations, std::atomic<bool>& stop) {
-    // Implementation for programming Flash
-    return 0; // Return appropriate status
+int ProgrammerTool::ProgramFlash(const Device& device,
+                                 const std::string& bitfile,
+                                 ProgramFlashOperation operations,
+                                 std::atomic<bool>& stop) {
+  // Implementation for programming Flash
+  return 0;  // Return appropriate status
 }
 
-int ProgrammerTool::ProgramOTP(const Device& device, const std::string& bitfile, std::atomic<bool>& stop) {
-    // Implementation for programming OTP
-    return 0; // Return appropriate status
+int ProgrammerTool::ProgramOTP(const Device& device, const std::string& bitfile,
+                               std::atomic<bool>& stop) {
+  // Implementation for programming OTP
+  return 0;  // Return appropriate status
 }
 
-} // namespace FOEDAG end
-
+}  // namespace FOEDAG

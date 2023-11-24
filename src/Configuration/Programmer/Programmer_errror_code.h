@@ -1,5 +1,5 @@
 namespace FOEDAG {
-   
+
 enum ProgrammerErrorCode {
   NoError = 0,
   InvalidArgument = -100,

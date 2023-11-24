@@ -271,4 +271,4 @@ int HardwareManager::program_fpga(Device device, std::string bitstream_filepath,
 
   return 1;
 }
-}
+}  // namespace FOEDAG
