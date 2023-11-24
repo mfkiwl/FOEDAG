@@ -25,8 +25,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 namespace FOEDAG {
 
 bool operator==(const Cable &c1, const Cable &c2) {
-  return c1.vendor_id == c2.vendor_id && 
-         c1.product_id == c2.product_id &&
+  return c1.vendor_id == c2.vendor_id && c1.product_id == c2.product_id &&
          c1.bus_addr == c2.bus_addr && c1.port_addr == c2.port_addr &&
          c1.device_addr == c2.device_addr && c1.channel == c2.channel &&
          c1.serial_number == c2.serial_number &&
@@ -36,31 +35,25 @@ bool operator==(const Cable &c1, const Cable &c2) {
 }
 
 bool operator==(const Tap &t1, const Tap &t2) {
-  return 
-         t1.idcode == t2.idcode && 
-         t1.index == t2.index &&
+  return t1.idcode == t2.idcode && t1.index == t2.index &&
          t1.irlength == t2.irlength;
 }
 
 bool operator==(const Device &d1, const Device &d2) {
-  return d1.index == d2.index && 
-         d1.name == d2.name && 
-         d1.flashSize == d2.flashSize &&
-         d1.type == d2.type &&
-         d1.cable == d2.cable &&
-         d1.tap == d2.tap;
+  return d1.index == d2.index && d1.name == d2.name &&
+         d1.flashSize == d2.flashSize && d1.type == d2.type &&
+         d1.cable == d2.cable && d1.tap == d2.tap;
 }
 
 // bool operator==(const Tap &t1, const Tap &t2) {
-//   return //t1.enabled == t2.enabled && 
+//   return //t1.enabled == t2.enabled &&
 //          //t1.expected == t2.expected &&
 //          t1.idcode == t2.idcode && t1.index == t2.index &&
-//          //t1.irCap == t2.irCap && 
+//          //t1.irCap == t2.irCap &&
 //          t1.irlength == t2.irlength;// &&
 //          //t1.irMask == t2.irMask;
 //          //&& t1.tapName == t2.tapName;
 // }
-
 
 bool operator<(const Device &d1, const Device &d2) {
   return d1.name.size() < d2.name.size();

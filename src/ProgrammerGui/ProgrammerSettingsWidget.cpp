@@ -61,15 +61,13 @@ ProgrammerSettingsWidget::ProgrammerSettingsWidget(
     // ui->tableWidgetDevices->setItem(
     //     rowIndex, 2,
     //     new QTableWidgetItem{ToHexString(deviceInfo->dev.tap.irMask)});
-        ui->tableWidgetDevices->setItem(
-        rowIndex, 2,
-        new QTableWidgetItem{"dummy irmask"});
+    ui->tableWidgetDevices->setItem(rowIndex, 2,
+                                    new QTableWidgetItem{"dummy irmask"});
     // ui->tableWidgetDevices->setItem(
     //     rowIndex, 3,
     //     new QTableWidgetItem{QString::number(deviceInfo->dev.tap.irLen)});
-        ui->tableWidgetDevices->setItem(
-        rowIndex, 3,
-        new QTableWidgetItem{"dummy irlen"});
+    ui->tableWidgetDevices->setItem(rowIndex, 3,
+                                    new QTableWidgetItem{"dummy irlen"});
   }
 }
 

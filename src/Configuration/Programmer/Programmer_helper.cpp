@@ -30,9 +30,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "CFGCommon/CFGCommon.h"
 #include "Programmer.h"
 #include "ProgrammerGuiInterface.h"
+#include "Programmer_errror_code.h"
 #include "Utils/StringUtils.h"
 #include "libusb.h"
-#include "Programmer_errror_code.h"
 
 namespace FOEDAG {
 
@@ -300,7 +300,8 @@ std::stringstream buildFpgaTargetStringStream(const Device& device) {
 
   // ss << std::dec;
   // ss << " -c \"target create " << device.name << device.index
-  //    << " riscv -endian little -chain-position " << device.name << device.index
+  //    << " riscv -endian little -chain-position " << device.name <<
+  //    device.index
   //    << ".tap\"";
   // ss << " -c \"pld device gemini " << device.name << device.index << "\"";
   return ss;
@@ -349,10 +350,12 @@ std::string buildListDeviceCommand(const Cable& cable,
 
   // for (const Tap& tap : foundTapList) {
   //   cmd << " -c \"jtag newtap " << tap.tapName << tap.index << " tap -irlen "
-  //       << tap.irLen << " -expected-id 0x" << std::hex << tap.expected << "\"";
+  //       << tap.irLen << " -expected-id 0x" << std::hex << tap.expected <<
+  //       "\"";
 
   //   cmd << " -c \"target create " << tap.tapName << tap.index
-  //       << " riscv -endian little -chain-position " << tap.tapName << tap.index
+  //       << " riscv -endian little -chain-position " << tap.tapName <<
+  //       tap.index
   //       << ".tap\"";
   // }
 

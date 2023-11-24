@@ -41,12 +41,16 @@ class OpenocdAdapter : public JtagAdapter, public ProgramingAdapter {
         m_command_executor(command_executor) {}
   virtual std::vector<uint32_t> scan(const Cable &cable) override;
 
-  virtual int pld(const Device &device, std::string bitfile, std::atomic<bool>& stop,
-                                  progress_func_type progress_callback) override;
-  virtual int otp(const Device &device, std::string bitfile, std::atomic<bool>& stop,
-                                  progress_func_type progress_callback) override;
-  virtual int flash(const Device &device, std::string bitfile, std::atomic<bool>& stop,
-                                  progress_func_type progress_callback) override;
+  virtual int pld(const Device &device, std::string bitfile,
+                  std::atomic<bool> &stop,
+                  progress_func_type progress_callback) override;
+  virtual int otp(const Device &device, std::string bitfile,
+                  std::atomic<bool> &stop,
+                  progress_func_type progress_callback) override;
+  virtual int flash(const Device &device, std::string bitfile,
+                    std::atomic<bool> &stop,
+                    progress_func_type progress_callback) override;
+
  private:
   int execute(const Cable &cable, std::string &output);
   std::string convert_transport_to_string(TransportType transport,

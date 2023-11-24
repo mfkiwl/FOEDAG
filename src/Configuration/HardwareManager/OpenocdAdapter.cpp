@@ -59,16 +59,19 @@ std::vector<uint32_t> OpenocdAdapter::scan(const Cable &cable) {
   return idcode_array;
 }
 
-int OpenocdAdapter::pld(const Device &device, std::string bitfile, std::atomic<bool>& stop,
-                                  progress_func_type progress_callback){
+int OpenocdAdapter::pld(const Device &device, std::string bitfile,
+                        std::atomic<bool> &stop,
+                        progress_func_type progress_callback) {
   return 0;
 }
-int OpenocdAdapter::otp(const Device &device, std::string bitfile, std::atomic<bool>& stop,
-                                  progress_func_type progress_callback){
+int OpenocdAdapter::otp(const Device &device, std::string bitfile,
+                        std::atomic<bool> &stop,
+                        progress_func_type progress_callback) {
   return 0;
 }
-int OpenocdAdapter::flash(const Device &device, std::string bitfile, std::atomic<bool>& stop,
-                                  progress_func_type progress_callback){
+int OpenocdAdapter::flash(const Device &device, std::string bitfile,
+                          std::atomic<bool> &stop,
+                          progress_func_type progress_callback) {
   return 0;
 }
 
@@ -125,4 +128,4 @@ std::string OpenocdAdapter::convert_transport_to_string(TransportType transport,
   return defval;
 }
 
-}  // namespace
+}  // namespace FOEDAG

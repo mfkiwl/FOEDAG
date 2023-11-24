@@ -29,13 +29,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "CFGCommon/CFGArg_auto.h"
 #include "CFGCommon/CFGCommon.h"
+#include "Configuration/HardwareManager/HardwareManager.h"
+#include "Configuration/HardwareManager/OpenocdAdapter.h"
 #include "ProgrammerGuiInterface.h"
+#include "Programmer_errror_code.h"
 #include "Programmer_helper.h"
 #include "libusb.h"
 #include "tcl.h"
-#include "Programmer_errror_code.h"
-#include "Configuration/HardwareManager/HardwareManager.h"
-#include "Configuration/HardwareManager/OpenocdAdapter.h"
 namespace FOEDAG {
 
 // openOCDPath used by library
@@ -69,10 +69,10 @@ void programmer_entry(CFGCommon_ARG* cmdarg) {
   if (arg->m_help) {
     return;
   }
-    // setup hardware manager and its depencencies
+  // setup hardware manager and its depencencies
   OpenocdAdapter jtag_adapter{cmdarg->toolPath.string(), CFG_execute_cmd};
   HardwareManager hardware_manager{&jtag_adapter};
-  
+
   std::string subCmd = arg->get_sub_arg_name();
   if (cmdarg->compilerName == "dummy") {
     Cable cable1{};
@@ -209,7 +209,7 @@ void programmer_entry(CFGCommon_ARG* cmdarg) {
       auto list_device_arg =
           static_cast<const CFGArg_PROGRAMMER_LIST_DEVICE*>(arg->get_sub_arg());
       std::vector<Device> devices{};
-      
+
       if (list_device_arg->m_args.size() == 1) {
         std::string cable_name = list_device_arg->m_args[0];
         if (!hardware_manager.is_cable_exists(cable_name, true)) {
@@ -220,8 +220,8 @@ void programmer_entry(CFGCommon_ARG* cmdarg) {
         processDeviceList(devices[0].cable, devices, list_device_arg->verbose);
         if (!devices.empty()) {
           cmdarg->tclOutput =
-            buildCableDevicesAliasNameWithSpaceSeparatedString(devices[0].cable,
-                                                                devices);
+              buildCableDevicesAliasNameWithSpaceSeparatedString(
+                  devices[0].cable, devices);
         }
       } else {
         // fild all devices
@@ -230,12 +230,11 @@ void programmer_entry(CFGCommon_ARG* cmdarg) {
           auto devices = hardware_manager.get_devices(cable);
           processDeviceList(cable, devices, list_device_arg->verbose);
           cmdarg->tclOutput +=
-                  buildCableDevicesAliasNameWithSpaceSeparatedString(
-                      cable, devices) + " ";
+              buildCableDevicesAliasNameWithSpaceSeparatedString(cable,
+                                                                 devices) +
+              " ";
         }
       }
-      
-
 
       // todo
       // processDeviceList(cable, devices, list_device_arg->verbose);
@@ -244,10 +243,10 @@ void programmer_entry(CFGCommon_ARG* cmdarg) {
       //       buildCableDevicesAliasNameWithSpaceSeparatedString(cable,
       //                                                           devices);
       // }
-    
-    
+
       // auto list_device =
-      //     static_cast<const CFGArg_PROGRAMMER_LIST_DEVICE*>(arg->get_sub_arg());
+      //     static_cast<const
+      //     CFGArg_PROGRAMMER_LIST_DEVICE*>(arg->get_sub_arg());
       // std::vector<Device> devices;
       // std::vector<Cable> cables;
       // if (list_device->m_args.size() == 1) {
@@ -258,8 +257,8 @@ void programmer_entry(CFGCommon_ARG* cmdarg) {
       //   }
       //   auto cableIterator = cableMap.find(cableInput);
       //   if (cableIterator == cableMap.end()) {
-      //     CFG_POST_ERR("Cable not found: %s", list_device->m_args[0].c_str());
-      //     return;
+      //     CFG_POST_ERR("Cable not found: %s",
+      //     list_device->m_args[0].c_str()); return;
       //   }
       //   Cable cable = cableIterator->second;
       //   status = ListDevices(cable, devices);
@@ -561,7 +560,8 @@ int GetAvailableCables(std::vector<Cable>& cables) {
   //   }
   //   uint16_t cableIndex = 1;
   //   for (size_t i = 0; i < supportedCableVendorIdProductId.size(); i++) {
-  //     if (devDesc.idVendor == std::get<0>(supportedCableVendorIdProductId[i]) &&
+  //     if (devDesc.idVendor == std::get<0>(supportedCableVendorIdProductId[i])
+  //     &&
   //         devDesc.idProduct ==
   //             std::get<1>(supportedCableVendorIdProductId[i])) {
   //       Cable cable;
@@ -625,9 +625,9 @@ int ListDevices(const Cable& cable, std::vector<Device>& devices) {
   //   return returnCode;
   // }
 
-  // std::string scanChainCmd = libOpenOcdExecPath + buildScanChainCommand(cable);
-  // returnCode = CFG_execute_cmd(scanChainCmd, cmdOutput, nullptr, stopCommand);
-  // if (returnCode) {
+  // std::string scanChainCmd = libOpenOcdExecPath +
+  // buildScanChainCommand(cable); returnCode = CFG_execute_cmd(scanChainCmd,
+  // cmdOutput, nullptr, stopCommand); if (returnCode) {
   //   outputMsg = "Failed to execute following command " + scanChainCmd +
   //               ". Error code: " + std::to_string(returnCode) + "\n";
   //   outputMsg += "ListDevices() failed.\n";
@@ -655,7 +655,8 @@ int ListDevices(const Cable& cable, std::vector<Device>& devices) {
   // std::string listDeviceCmd =
   //     libOpenOcdExecPath + buildListDeviceCommand(cable, foundTap);
   // returnCode =
-  //     CFG_execute_cmd(listDeviceCmd, listDeviceCmdOutput, nullptr, stopCommand);
+  //     CFG_execute_cmd(listDeviceCmd, listDeviceCmdOutput, nullptr,
+  //     stopCommand);
   // if (returnCode) {
   //   outputMsg += "Failed to execute following command " + listDeviceCmd +
   //                ". Error code: " + std::to_string(returnCode) + "\n";
@@ -670,15 +671,15 @@ int ListDevices(const Cable& cable, std::vector<Device>& devices) {
   //   outputMsg += "Failed to extract device list from command output:\n" +
   //                listDeviceCmdOutput + "\n";
   //   outputMsg += "ListDevices() failed.\n";
-  //   addOrUpdateErrorMessage(ProgrammerErrorCode::InvalidFlashSize, outputMsg);
-  //   return ProgrammerErrorCode::InvalidFlashSize;
+  //   addOrUpdateErrorMessage(ProgrammerErrorCode::InvalidFlashSize,
+  //   outputMsg); return ProgrammerErrorCode::InvalidFlashSize;
   // }
-  //return ProgrammerErrorCode::NoError;
+  // return ProgrammerErrorCode::NoError;
 }
 
 int GetFpgaStatus(const Cable& cable, const Device& device, CfgStatus& status,
                   std::string& statusOutputPrint) {
-  return ProgrammerErrorCode::NoError; 
+  return ProgrammerErrorCode::NoError;
   // if (libOpenOcdExecPath.empty()) {
   //   return ProgrammerErrorCode::OpenOCDExecutableNotFound;
   // }
@@ -745,7 +746,8 @@ int ProgramFpga(const Cable& cable, const Device& device,
   //                                            outStream, regexPattern, stop,
   //                                            callbackProgress, callbackMsg);
   // if (returnCode) {
-  //   errorMessage = "Failed to execute following command " + programFpgaCommand +
+  //   errorMessage = "Failed to execute following command " +
+  //   programFpgaCommand +
   //                  ". Error code: " + std::to_string(returnCode) + "\n";
   //   errorMessage += "ProgramFpga() failed.\n";
   //   addOrUpdateErrorMessage(ProgrammerErrorCode::FailedExecuteCommand,
@@ -789,7 +791,8 @@ int ProgramOTP(const Cable& cable, const Device& device,
   //                                            outStream, regexPattern, stop,
   //                                            callbackProgress, callbackMsg);
   // if (returnCode) {
-  //   errorMessage = "Failed to execute following command " + programOTPCommand +
+  //   errorMessage = "Failed to execute following command " + programOTPCommand
+  //   +
   //                  ". Error code: " + std::to_string(returnCode) + "\n";
   //   errorMessage += "ProgramOTP() failed.\n";
   //   addOrUpdateErrorMessage(ProgrammerErrorCode::FailedExecuteCommand,
