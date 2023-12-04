@@ -248,8 +248,7 @@ CfgStatus extractStatus(const std::string& statusString, bool& statusFound) {
   std::string line;
   size_t pos = -1;
   statusFound = false;
-  std::vector<std::string> matches;
-  std::vector<std::string> tokens;
+  std::vector<std::string> matches, tokens;
   while (std::getline(iss, line)) {
     matches = findStringPattern(line, pattern);
     if (matches.size() == 0) {
@@ -477,6 +476,10 @@ bool isOperationRequested(const std::string& operation,
 }
 
 void processCableList(const std::vector<Cable>& cableList, bool verbose) {
+  if (cableList.size() == 0) {
+    CFG_POST_MSG("  No cables is connected.");
+    return;
+  }
   if (verbose) {
     printCableList(cableList, verbose);
   }
@@ -492,10 +495,6 @@ void processDeviceList(const Cable& cable,
 }
 
 void printCableList(const std::vector<Cable>& cableList, bool verbose) {
-  if (cableList.size() == 0) {
-    CFG_POST_MSG("  No cables is connected.");
-    return;
-  }
   if (verbose) {
     CFG_POST_MSG("Cable            ");
     CFG_POST_MSG("-----------------");

@@ -24,11 +24,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <cstdint>
 
+namespace FOEDAG {
 struct Tap {
   uint32_t index;
-  // std::string tapName;
   uint32_t idcode;
   uint32_t irlength;
 };
+
+}  // namespace FOEDAG
 
 #endif  // __TAP_H__

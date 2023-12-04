@@ -10,6 +10,7 @@
 using progress_func_type = std::function<void(double)>;
 
 namespace FOEDAG {
+struct CfgStatus;
 class ProgramingAdapter {
  public:
   virtual ~ProgramingAdapter() = default;
@@ -22,6 +23,7 @@ class ProgramingAdapter {
   virtual int flash(const Device& device, std::string bitfile,
                     std::atomic<bool>& stop,
                     progress_func_type progress_callback) = 0;
+  virtual int query_fpga_status(const Device& device, CfgStatus& status) = 0;
 };
 
 }  // namespace FOEDAG

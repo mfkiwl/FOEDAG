@@ -28,35 +28,67 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <vector>
 
 #include "JtagAdapter.h"
-#include "ProgramingAdapter.h"
+#include "ProgrammingAdapter.h"
+#include "Tap.h"
 namespace FOEDAG {
+
+enum CommandOutputType {
+  NOT_OUTPUT = 0,
+  CMD_PROGRESS,
+  CMD_ERROR,
+  CMD_TIMEOUT,
+  CBUFFER_TIMEOUT,
+  CONFIG_ERROR,
+  CONFIG_SUCCESS,
+  UNKNOWN_FIRMWARE,
+  FSBL_BOOT_FAILURE,
+  INVALID_BITSTREAM,
+};
 using CommandExecutorFuncType = std::function<int(
-    const std::string &, std::string &, std::ostream *, std::atomic<bool> &)>;
+    const std::string&, std::string&, std::ostream*, std::atomic<bool>&)>;
+using ProgressCallback = std::function<void(std::string)>;
+using OutputMessageCallback = std::function<void(std::string)>;
 
-class OpenocdAdapter : public JtagAdapter, public ProgramingAdapter {
+class OpenocdAdapter : public JtagAdapter, public ProgrammingAdapter {
  public:
-  OpenocdAdapter(std::string openocd_filepath,
-                 CommandExecutorFuncType command_executor)
-      : m_openocd_filepath(openocd_filepath),
-        m_command_executor(command_executor) {}
-  virtual std::vector<uint32_t> scan(const Cable &cable) override;
+  OpenocdAdapter(std::string openocd);
+  virtual ~OpenocdAdapter();
+  virtual std::vector<uint32_t> scan(const Cable& cable) override;
 
-  virtual int pld(const Device &device, std::string bitfile,
-                  std::atomic<bool> &stop,
-                  progress_func_type progress_callback) override;
-  virtual int otp(const Device &device, std::string bitfile,
-                  std::atomic<bool> &stop,
-                  progress_func_type progress_callback) override;
-  virtual int flash(const Device &device, std::string bitfile,
-                    std::atomic<bool> &stop,
-                    progress_func_type progress_callback) override;
+  int program_fpga(const Device& device, const std::string& bitfile,
+                   std::atomic<bool>& stop, std::ostream* outStream = nullptr,
+                   OutputMessageCallback callbackMsg = nullptr,
+                   ProgressCallback callbackProgress = nullptr) override;
+  int program_flash(const Device& device, const std::string& bitfile,
+                    std::atomic<bool>& stop, ProgramFlashOperation modes,
+                    std::ostream* outStream = nullptr,
+                    OutputMessageCallback callbackMsg = nullptr,
+                    ProgressCallback callbackProgress = nullptr) override;
+  int program_otp(const Device& device, const std::string& bitfile,
+                  std::atomic<bool>& stop, std::ostream* outStream = nullptr,
+                  OutputMessageCallback callbackMsg = nullptr,
+                  ProgressCallback callbackProgress = nullptr) override;
+  int query_fpga_status(const Device& device, CfgStatus& cfgStatus,
+                        std::string& outputMessage) override;
+
+  static CommandOutputType check_output(std::string str,
+                                        std::vector<std::string>& output);
+  static bool check_regex(std::string str, std::string pattern,
+                          std::vector<std::string>& output);
+  std::string get_last_output() { return m_last_output; };
 
  private:
-  int execute(const Cable &cable, std::string &output);
+  int execute(const Cable& cable, std::string cmd, std::string& output);
   std::string convert_transport_to_string(TransportType transport,
                                           std::string defval = "jtag");
-  std::string m_openocd_filepath;
-  CommandExecutorFuncType m_command_executor;
+  std::string build_cable_config(const Cable& cable);
+  std::string build_tap_config(const std::vector<Tap>& taplist);
+  std::string build_target_config(const Device& device);
+  std::string m_openocd;
+  std::vector<Tap> m_taplist;
+  std::string m_last_output;
 };
+
 }  // namespace FOEDAG
+
 #endif  //__OPENOCDADAPTER_H__

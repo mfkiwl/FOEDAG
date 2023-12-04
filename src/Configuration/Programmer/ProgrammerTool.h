@@ -2,31 +2,37 @@
 #ifndef PROGRAMMERTOOL_H
 #define PROGRAMMERTOOL_H
 
-#include "../HardwareManager/JtagAdapter.h"  // Assuming JtagAdapter is defined in another file
-#include "IProgrammerTool.h"
+#include "Configuration/HardwareManager/ProgrammingAdapter.h"
 
 namespace FOEDAG {
 
-class JtagAdapter;
 struct Device;
 
 enum class ProgramFlashOperation : uint32_t;
 
-class ProgrammerTool : public IProgrammerTool {
- private:
-  JtagAdapter* m_adapter;
-
+class ProgrammerTool : public ProgrammingAdapter {
  public:
-  ProgrammerTool(JtagAdapter* adapter);
+  ProgrammerTool(ProgrammingAdapter* adapter);
   ~ProgrammerTool() override;
 
-  int ProgrammerFPGA(const Device& device, const std::string& bitfile,
-                     std::atomic<bool>& stop) override;
-  int ProgramFlash(const Device& device, const std::string& bitfile,
-                   ProgramFlashOperation operations,
-                   std::atomic<bool>& stop) override;
-  int ProgramOTP(const Device& device, const std::string& bitfile,
-                 std::atomic<bool>& stop) override;
+  int program_fpga(const Device& device, const std::string& bitfile,
+                   std::atomic<bool>& stop, std::ostream* outStream = nullptr,
+                   OutputMessageCallback callbackMsg = nullptr,
+                   ProgressCallback callbackProgress = nullptr) override;
+  int program_flash(const Device& device, const std::string& bitfile,
+                    std::atomic<bool>& stop, ProgramFlashOperation modes,
+                    std::ostream* outStream = nullptr,
+                    OutputMessageCallback callbackMsg = nullptr,
+                    ProgressCallback callbackProgress = nullptr) override;
+  int program_otp(const Device& device, const std::string& bitfile,
+                  std::atomic<bool>& stop, std::ostream* outStream = nullptr,
+                  OutputMessageCallback callbackMsg = nullptr,
+                  ProgressCallback callbackProgress = nullptr) override;
+  int query_fpga_status(const Device& device, CfgStatus& cfgStatus,
+                        std::string& outputMessage) override;
+
+ private:
+  ProgrammingAdapter* m_adapter;
 };
 
 }  // namespace FOEDAG

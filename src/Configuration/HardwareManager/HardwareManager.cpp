@@ -35,13 +35,11 @@ const std::vector<HardwareManager_CABLE_INFO> HardwareManager::m_cable_db = {
     {"RsFtdi", FTDI, 0x0403, 0x6011},
     {"RsFtdi", FTDI, 0x0403, 0x6010},
     {"RsFtdi", FTDI, 0x0403, 0x6014},
-    {"Jlink", JLINK, 0x1366, 0x0101}
-};
+    {"Jlink", JLINK, 0x1366, 0x0101}};
 
 const std::vector<HardwareManager_DEVICE_INFO> HardwareManager::m_device_db = {
     {"Gemini", 0x1000563d, 5, 0xffffffff, GEMINI, 16384},
-    {"OCLA", 0x10000db3, 5, 0xffffffff, OCLA, 0}
-};
+    {"OCLA", 0x10000db3, 5, 0xffffffff, OCLA, 0}};
 
 HardwareManager::HardwareManager(JtagAdapter* adapter) : m_adapter(adapter) {
   CFG_ASSERT(m_adapter != nullptr);
@@ -60,6 +58,7 @@ std::vector<Cable> HardwareManager::get_cables() {
   std::vector<Cable> cables;
 
   rc = libusb_init(&ctx);
+  rc = -999;
   CFG_ASSERT_MSG(rc == 0, "libusb_init() fail. Error: %s",
                  libusb_error_name(rc));
 
