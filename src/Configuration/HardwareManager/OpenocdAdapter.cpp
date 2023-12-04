@@ -26,8 +26,15 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <sstream>
 
 #include "Configuration/CFGCommon/CFGCommon.h"
+#include "Configuration/HardwareManager/HardwareManager.h"
+#include "Configuration/Programmer/Programmer_helper.h"
 namespace FOEDAG {
-std::vector<uint32_t> OpenocdAdapter::scan(const Cable &cable) {
+
+OpenocdAdapter::OpenocdAdapter(std::string openocd) : m_openocd(openocd) {}
+
+OpenocdAdapter::~OpenocdAdapter() {}
+
+std::vector<uint32_t> OpenocdAdapter::scan(const Cable& cable) {
   std::vector<uint32_t> idcode_array;
   std::string line;
   std::cmatch matches;
@@ -44,7 +51,8 @@ std::vector<uint32_t> OpenocdAdapter::scan(const Cable &cable) {
   //  2 omap5912.unknown      Y    0x00000000 0x00000000     8 0x01  0x03
   //  3 auto0.tap             Y    0x20000913 0x00000000     5 0x01  0x03
 
-  CFG_ASSERT_MSG(execute(cable, output) == 0, "cmdexec error: %s",
+  // use "scan_chain" cmd to collect tap ids
+  CFG_ASSERT_MSG(execute(cable, "scan_chain", output) == 0, "cmdexec error: %s",
                  output.c_str());
   std::stringstream ss(output);
 
@@ -59,33 +67,398 @@ std::vector<uint32_t> OpenocdAdapter::scan(const Cable &cable) {
   return idcode_array;
 }
 
-int OpenocdAdapter::pld(const Device &device, std::string bitfile,
-                        std::atomic<bool> &stop,
-                        progress_func_type progress_callback) {
-  return 0;
-}
-int OpenocdAdapter::otp(const Device &device, std::string bitfile,
-                        std::atomic<bool> &stop,
-                        progress_func_type progress_callback) {
-  return 0;
-}
-int OpenocdAdapter::flash(const Device &device, std::string bitfile,
-                          std::atomic<bool> &stop,
-                          progress_func_type progress_callback) {
-  return 0;
+bool OpenocdAdapter::check_regex(std::string str, std::string pattern,
+                                 std::vector<std::string>& output) {
+  std::smatch m;
+  int i = 0;
+
+  if (std::regex_search(str, m, std::regex{pattern, std::regex::icase})) {
+    output.clear();
+    for (auto& s : m) {
+      if (i++ > 0) {
+        output.push_back(s);
+      }
+    }
+    return true;
+  }
+
+  return false;
 }
 
-int OpenocdAdapter::execute(const Cable &cable, std::string &output) {
-  std::atomic<bool> stop = false;
+CommandOutputType OpenocdAdapter::check_output(
+    std::string str, std::vector<std::string>& output) {
+  static std::map<CommandOutputType, std::string> patterns = {
+      {CMD_PROGRESS, R"(Progress +(\d+.\d+)% +\((\d+)\/(\d+) +bytes\))"},
+      {CMD_ERROR, R"(\[RS\] Command error (\d+)\.*)"},
+      {CMD_TIMEOUT, R"(\[RS\] Timed out waiting for task to complete\.)"},
+      {CBUFFER_TIMEOUT, R"(\[RS\] Circular buffer timed out\.)"},
+      {FSBL_BOOT_FAILURE, R"(\[RS\] Failed to load FSBL firmware)"},
+      {UNKNOWN_FIRMWARE, R"(\[RS\] Unknown firmware)"},
+      {CONFIG_ERROR,
+       R"(\[RS\] FPGA fabric configuration error \(cfg_done *= *(\d+), *cfg_error *= *(\d+)\))"},
+      {CONFIG_SUCCESS, R"(\[RS\] Configured FPGA fabric successfully)"},
+      {INVALID_BITSTREAM,
+       R"(\[RS\] Unsupported UBI header version ([0-9a-f]+))"},
+  };
+
+  for (auto const& [key, pat] : patterns) {
+    if (check_regex(str, pat, output)) {
+      return key;
+    }
+  }
+
+  return NOT_OUTPUT;
+}
+
+int OpenocdAdapter::program_fpga(const Device& device,
+                                 const std::string& bitfile,
+                                 std::atomic<bool>& stop,
+                                 std::ostream* outStream,
+                                 OutputMessageCallback callbackMsg,
+                                 ProgressCallback callbackProgress) {
   std::ostringstream ss;
+  int cmd_err = 0;
+  int cmd_timeout = 0;
+  int cbuffer_timeout = 0;
+  int unknown_fw = 0;
+  int cfg_success = 0;
+  int cfg_err = 0;
+  int fsbl_boot_failure = 0;
 
-  CFG_ASSERT(std::filesystem::exists(m_openocd_filepath));
-  CFG_ASSERT(m_command_executor != nullptr);
+  CFG_ASSERT(std::filesystem::exists(m_openocd));
 
   ss << " -l /dev/stdout"  //<-- not windows friendly
      << " -d2";
 
-  // setup cable configuration
+  ss << build_cable_config(device.cable) << build_tap_config(m_taplist)
+     << build_target_config(device);
+
+  std::string cmd = "gemini load 1 fpga " + bitfile + " -p 1 -d " +
+                    (device.type == DeviceType::VIRGO ? "virgo" : "gemini");
+
+  ss << " -c \"init\"";
+  ss << " -c \"" << cmd << "\"";
+  ss << " -c \"exit\"";
+
+  // run the command
+  int res = CFG_execute_cmd_with_callback(
+      "OPENOCD_DEBUG_LEVEL=-3 " + m_openocd + ss.str(), m_last_output, outStream,
+      std::regex{}, stop, nullptr, [&](const std::string& line) {
+        std::vector<std::string> data{};
+        switch (check_output(line, data)) {
+          case CMD_PROGRESS: {
+            double percent = std::strtod(data[0].c_str(), nullptr);
+            std::ostringstream stream;
+            if (callbackProgress != nullptr) {
+              if (percent < 100) {
+                callbackProgress(data[0]);
+              } else {
+                callbackProgress("99.99");
+              }
+            }
+            break;
+          }
+          case CMD_ERROR:
+            cmd_err = std::stoi(data[0]);
+            break;
+          case CMD_TIMEOUT:
+            cmd_timeout = 1;
+            break;
+          case CBUFFER_TIMEOUT:
+            cbuffer_timeout = 1;
+            break;
+          case CONFIG_ERROR:
+            cfg_err = 1;
+            break;
+          case CONFIG_SUCCESS:
+            callbackProgress("100.00");
+            cfg_success = 1;
+            break;
+          case UNKNOWN_FIRMWARE:
+            unknown_fw = 1;
+            break;
+          case FSBL_BOOT_FAILURE:
+            fsbl_boot_failure = 1;
+            break;
+          default:
+            break;
+        }
+      });
+
+  if (fsbl_boot_failure) return -6;
+
+  if (cfg_err) return -5;
+
+  if (cmd_timeout) return -4;
+
+  if (cbuffer_timeout) return -3;
+
+  if (unknown_fw) return -2;
+
+  if (cmd_err) return cmd_err;
+
+  if (res != 0) {
+    return -1;  // general cmdline error
+  }
+
+  return 0;  // no error
+}
+int OpenocdAdapter::program_flash(
+    const Device& device, const std::string& bitfile, std::atomic<bool>& stop,
+    ProgramFlashOperation modes, std::ostream* outStream,
+    OutputMessageCallback callbackMsg, ProgressCallback callbackProgress) {
+      
+  std::ostringstream ss;
+  int cmd_err = 0;
+  int cmd_timeout = 0;
+  int cbuffer_timeout = 0;
+  int unknown_fw = 0;
+  int cfg_success = 0;
+  int cfg_err = 0;
+  int fsbl_boot_failure = 0;
+
+  CFG_ASSERT(std::filesystem::exists(m_openocd));
+
+  ss << " -l /dev/stdout"  //<-- not windows friendly
+     << " -d2";
+
+  ss << build_cable_config(device.cable) << build_tap_config(m_taplist)
+     << build_target_config(device);
+
+  std::string cmd = "gemini load 1 flash " + bitfile + " -p 1 -d " +
+                    (device.type == DeviceType::VIRGO ? "virgo" : "gemini");
+
+  ss << " -c \"init\"";
+  ss << " -c \"" << cmd << "\"";
+  ss << " -c \"exit\"";
+
+  // run the command
+  int res = CFG_execute_cmd_with_callback(
+      "OPENOCD_DEBUG_LEVEL=-3 " + m_openocd + ss.str(), m_last_output, nullptr,
+      std::regex{}, stop, nullptr, [&](const std::string& line) {
+        std::vector<std::string> data{};
+        switch (check_output(line, data)) {
+          case CMD_PROGRESS: {
+            double percent = std::strtod(data[0].c_str(), nullptr);
+            std::ostringstream stream;
+            if (callbackProgress != nullptr) {
+              if (percent < 100) {
+                callbackProgress(data[0]);
+              } else {
+                callbackProgress("99.99");
+              }
+            }
+            break;
+          }
+          case CMD_ERROR:
+            cmd_err = std::stoi(data[0]);
+            break;
+          case CMD_TIMEOUT:
+            cmd_timeout = 1;
+            break;
+          case CBUFFER_TIMEOUT:
+            cbuffer_timeout = 1;
+            break;
+          case CONFIG_ERROR:
+            cfg_err = 1;
+            break;
+          case CONFIG_SUCCESS:
+            if (callbackProgress != nullptr) {
+              callbackProgress("100.00");
+            }
+            cfg_success = 1;
+            break;
+          case UNKNOWN_FIRMWARE:
+            unknown_fw = 1;
+            break;
+          case FSBL_BOOT_FAILURE:
+            fsbl_boot_failure = 1;
+            break;
+          default:
+            break;
+        }
+      });
+
+  if (fsbl_boot_failure) return -6;
+
+  if (cfg_err) return -5;
+
+  if (cmd_timeout) return -4;
+
+  if (cbuffer_timeout) return -3;
+
+  if (unknown_fw) return -2;
+
+  if (cmd_err) return cmd_err;
+
+  if (res != 0) {
+    return -1;  // general cmdline error
+  }
+
+  return 0;  // no error
+}
+int OpenocdAdapter::program_otp(const Device& device,
+                                const std::string& bitfile,
+                                std::atomic<bool>& stop,
+                                std::ostream* outStream,
+                                OutputMessageCallback callbackMsg,
+                                ProgressCallback callbackProgress) {
+  std::ostringstream ss;
+  int cmd_err = 0;
+  int cmd_timeout = 0;
+  int cbuffer_timeout = 0;
+  int unknown_fw = 0;
+  int cfg_success = 0;
+  int cfg_err = 0;
+  int fsbl_boot_failure = 0;
+
+  CFG_ASSERT(std::filesystem::exists(m_openocd));
+
+  ss << " -l /dev/stdout"  //<-- not windows friendly
+     << " -d2";
+
+  ss << build_cable_config(device.cable) << build_tap_config(m_taplist)
+     << build_target_config(device);
+
+  std::string cmd = "gemini load 1 otp " + bitfile + " -p 1 -d " +
+                    (device.type == DeviceType::VIRGO ? "virgo" : "gemini");
+
+  ss << " -c \"init\"";
+  ss << " -c \"" << cmd << "\"";
+  ss << " -c \"exit\"";
+
+  // run the command
+  int res = CFG_execute_cmd_with_callback(
+      "OPENOCD_DEBUG_LEVEL=-3 " + m_openocd + ss.str(), m_last_output, outStream,
+      std::regex{}, stop, nullptr, [&](const std::string& line) {
+        std::vector<std::string> data{};
+        switch (check_output(line, data)) {
+          case CMD_PROGRESS: {
+            double percent = std::strtod(data[0].c_str(), nullptr);
+            std::ostringstream stream;
+            if (callbackProgress != nullptr) {
+              if (percent < 100) {
+                callbackProgress(data[0]);
+              } else {
+                callbackProgress("99.99");
+              }
+            }
+            break;
+          }
+          case CMD_ERROR:
+            cmd_err = std::stoi(data[0]);
+            break;
+          case CMD_TIMEOUT:
+            cmd_timeout = 1;
+            break;
+          case CBUFFER_TIMEOUT:
+            cbuffer_timeout = 1;
+            break;
+          case CONFIG_ERROR:
+            cfg_err = 1;
+            break;
+          case CONFIG_SUCCESS:
+            callbackProgress("100.00");
+            cfg_success = 1;
+            break;
+          case UNKNOWN_FIRMWARE:
+            unknown_fw = 1;
+            break;
+          case FSBL_BOOT_FAILURE:
+            fsbl_boot_failure = 1;
+            break;
+          default:
+            break;
+        }
+      });
+
+  if (fsbl_boot_failure) return -6;
+
+  if (cfg_err) return -5;
+
+  if (cmd_timeout) return -4;
+
+  if (cbuffer_timeout) return -3;
+
+  if (unknown_fw) return -2;
+
+  if (cmd_err) return cmd_err;
+
+  if (res != 0) {
+    return -1;  // general cmdline error
+  }
+  return 0;
+}
+
+int OpenocdAdapter::query_fpga_status(const Device& device,
+                                      CfgStatus& cfgStatus,
+                                      std::string& outputString) {
+  std::ostringstream ss;
+  std::atomic<bool> stopCommand{false};
+  std::string cmdOutput, outputMsg;
+  CFG_ASSERT(std::filesystem::exists(m_openocd));
+
+  ss << " -l /dev/stdout"  //<-- not windows friendly
+     << " -d2";
+
+  ss << build_cable_config(device.cable) << build_tap_config(m_taplist)
+     << build_target_config(device);
+
+  std::string cmd = "gemini status 1 fpga ";
+
+  ss << " -c \"init\"";
+  ss << " -c \"" << cmd << "\"";
+  ss << " -c \"exit\"";
+
+  int res = CFG_execute_cmd("OPENOCD_DEBUG_LEVEL=-3 " + m_openocd + ss.str(),
+                            cmdOutput, nullptr, stopCommand);
+
+  if (res != 0) {
+    return -1;  // general cmdline error
+  } else {
+    bool statusFound = false;
+    cfgStatus = extractStatus(cmdOutput, statusFound);
+    if (!statusFound) {
+      return -7;  // fail to parse status
+    }
+  }
+  return 0;
+}
+
+int OpenocdAdapter::execute(const Cable& cable, std::string cmd,
+                            std::string& output) {
+  std::atomic<bool> stop = false;
+  std::ostringstream ss;
+
+  CFG_ASSERT(std::filesystem::exists(m_openocd));
+
+  ss << " -l /dev/stdout"  //<-- not windows friendly
+     << " -d2";
+  ss << build_cable_config(cable);
+  ss << " -c \"init\"";
+  ss << " -c \"" << cmd << "\"";
+  ss << " -c \"exit\"";
+
+  // run the command
+  int res = CFG_execute_cmd("OPENOCD_DEBUG_LEVEL=-3 " + m_openocd + ss.str(),
+                            output, nullptr, stop);
+  return res;
+}
+
+std::string OpenocdAdapter::convert_transport_to_string(TransportType transport,
+                                                        std::string defval) {
+  switch (transport) {
+    case TransportType::JTAG:
+      return "jtag";
+      // Handle other transport types as needed
+  }
+  return defval;
+}
+
+std::string OpenocdAdapter::build_cable_config(const Cable& cable) {
+  std::ostringstream ss;
+
+  // setup cable type specific configuration
   if (cable.cable_type == FTDI) {
     ss << " -c \"adapter driver ftdi;"
        << "ftdi vid_pid " << std::hex << std::showbase << cable.vendor_id << " "
@@ -106,26 +479,48 @@ int OpenocdAdapter::execute(const Cable &cable, std::string &output) {
      << "telnet_port disabled;"
      << "gdb_port disabled;\"";
 
-  // use "scan_chain" cmd to collect tap ids
-  ss << " -c \"init\"";
-  ss << " -c \"scan_chain\"";
-  ss << " -c \"exit\"";
-
-  // run the command
-  int res = m_command_executor(
-      "OPENOCD_DEBUG_LEVEL=-3 " + m_openocd_filepath + ss.str(), output,
-      nullptr, stop);
-  return res;
+  return ss.str();
 }
 
-std::string OpenocdAdapter::convert_transport_to_string(TransportType transport,
-                                                        std::string defval) {
-  switch (transport) {
-    case TransportType::JTAG:
-      return "jtag";
-      // Handle other transport types as needed
+std::string OpenocdAdapter::build_tap_config(const std::vector<Tap>& taplist) {
+  std::ostringstream ss;
+
+  // setup tap configuration
+  if (!taplist.empty()) {
+    ss << " -c \"";
+    for (const auto& tap : taplist) {
+      ss << "jtag newtap tap" << tap.index << " tap"
+         << " -irlen " << tap.irlength << " -expected-id " << std::hex
+         << std::showbase << tap.idcode << ";" << std::noshowbase << std::dec;
+    }
+    ss << "\"";
   }
-  return defval;
+
+  return ss.str();
 }
+
+std::string OpenocdAdapter::build_target_config(const Device& device) {
+  std::ostringstream ss;
+
+  // setup target configuration
+  if (device.type == GEMINI || device.type == VIRGO) {
+    ss << " -c \"target create gemini" << device.index
+       << " riscv -endian little -chain-position tap" << device.tap.index
+       << ".tap;\""
+       // add pld driver
+       << " -c \"pld device gemini gemini" << device.index << "\"";
+  } else if (device.type == OCLA) {
+    ss << " -c \"target create gemini" << device.index
+       << " testee -chain-position tap" << device.tap.index << ".tap;\"";
+  }
+
+  return ss.str();
+}
+
+// std::unique_ptr<HardwareManager> HardwareManager::create_instance(
+//     CFGCommon_ARG *cmdarg) {
+//   return std::make_unique<HardwareManager>(
+//       std::make_unique<OpenocdAdapter>(cmdarg->toolPath.string()));
+// }
 
 }  // namespace FOEDAG
