@@ -22,7 +22,8 @@ std::map<int, std::string> ErrorMessages = {
     {UnsupportedFunc, "Unsupported function"}};
 
 ProgrammerTool::ProgrammerTool(ProgrammingAdapter* adapter)
-    : m_adapter(adapter) {
+    : m_adapter(adapter)
+{
   CFG_ASSERT(m_adapter != nullptr);
 }
 
