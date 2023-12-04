@@ -70,8 +70,8 @@ int main(int argc, const char** argv) {
   }
   CFG_POST_MSG("return %d", ret);
   CFG_POST_MSG("-- GetAvailableCables(cables) --")
-  for (auto& cable : cables) {
-    CFG_POST_MSG("--------------")
+  //for (auto& cable : cables) {
+  //  CFG_POST_MSG("--------------")
     // CFG_POST_MSG("product ID: 0x%04x", cable.productId);
     // CFG_POST_MSG("vendor  ID: 0x%04x", cable.vendorId);
     // CFG_POST_MSG("serial    : %s", cable.serialNumber.c_str());
@@ -82,7 +82,7 @@ int main(int argc, const char** argv) {
     // CFG_POST_MSG("speed     : %d", cable.speed);
     // CFG_POST_MSG("transport : %d", cable.transport);
     // CFG_POST_MSG("channel   : %d", cable.channel);
-  }
+  //}
 
   CFG_POST_MSG("-- ListDevices(cables, outputMsg) --")
   ret = ListDevices(cables[0], devices);
@@ -95,8 +95,8 @@ int main(int argc, const char** argv) {
     return -1;
   }
   CFG_POST_MSG("### ListDevices API testing ###");
-  for (auto& device : devices) {
-    CFG_POST_MSG("-------------------------");
+  // for (auto& device : devices) {
+  //   CFG_POST_MSG("-------------------------");
     // CFG_POST_MSG("Device name: %s", device.name.c_str());
     // CFG_POST_MSG("Device index: %d", device.index);
     // CFG_POST_MSG("Device jtagId: 0x%08x", device.tapInfo.idCode);
@@ -104,8 +104,8 @@ int main(int argc, const char** argv) {
     // CFG_POST_MSG("Device irlength: %d", device.tapInfo.irLen);
     // CFG_POST_MSG("Device flashSize: %s bits",
     //  CFG_convert_number_to_unit_string(device.flashSize).c_str());
-    CFG_POST_MSG("-------------------------");
-  }
+  //   CFG_POST_MSG("-------------------------");
+  // }
 
   CfgStatus status;
   std::string statusCmdOutput;

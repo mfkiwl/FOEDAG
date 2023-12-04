@@ -44,7 +44,7 @@ namespace FOEDAG {
 static std::string libOpenOcdExecPath;
 // static std::vector<TapInfo> foundTap;
 static std::map<std::string, Cable> cableMap;
-static bool isCableMapInitialized = false;
+//static bool isCableMapInitialized = false;
 static bool isHwDbInitialized = false;
 static std::vector<HwDevices> cableDeviceDb;
 
@@ -63,6 +63,40 @@ static std::vector<HwDevices> cableDeviceDb;
 //     {FailedToProgramOTP, "Failed to program device OTP"},
 //     {InvalidFlashSize, "Invalid flash size"},
 //     {UnsupportedFunc, "Unsupported function"}};
+double ExtractNumber(const std::string& line) {
+
+  try {
+    // Convert string to double
+    return std::stod(line);
+  } catch (const std::invalid_argument&) {
+  }
+  return 0.0; // Return 0 or an appropriate default value if extraction fails
+}
+
+std::string UpdateDownloadProgress(double percentage) {
+  const int barWidth = 50; // Width of the progress bar
+  std::ostringstream progressStr;
+
+  progressStr << "Downloading: [";
+
+  int pos = static_cast<int>(barWidth * (percentage / 100.0));
+  
+  for (int i = 0; i < barWidth; ++i) {
+      if (i < pos) progressStr << "=";
+      else if (i == pos) progressStr << ">";
+      else progressStr << " ";
+  }
+
+  progressStr << "] " << int(percentage) << " %" ;
+  // CFG_post_msg(CFG_print("Progress....%6.2f%%", percentage),
+  //                   "INFO: ", false);
+  std::string debugString = progressStr.str() + "\r";
+  //CFG_POST_MSG(debugString.c_str());
+  CFG_post_msg(debugString.c_str(), "X" , false);
+  //std::cout << debugString;
+  //std::cout.flush();
+  return progressStr.str();
+}
 
 void programmer_entry(CFGCommon_ARG* cmdarg) {
   auto arg = std::static_pointer_cast<CFGArg_PROGRAMMER>(cmdarg->arg);
@@ -335,10 +369,10 @@ void programmer_entry(CFGCommon_ARG* cmdarg) {
       
       Device device{};
       std::vector<Tap> taplist{};
-      CfgStatus cfgStatus;
+      //CfgStatus cfgStatus;
       std::string statusPrintOut;
       if (!hardware_manager.is_cable_exists(cableInput, false)) {
-        CFG_POST_ERR("Cable '%s' not found", cable_name.c_str());
+        CFG_POST_ERR("Cable '%s' not found", cableInput.c_str());
         cmdarg->tclStatus = TCL_ERROR;
         return;
       }
@@ -349,7 +383,8 @@ void programmer_entry(CFGCommon_ARG* cmdarg) {
         cmdarg->tclStatus = TCL_ERROR;
         return;
       }
-      
+      openOcd.update_taplist(taplist);
+      ProgrammerTool programmer{&openOcd};
       std::atomic<bool> stop = false;
       ProgressCallback progress = nullptr;
       auto gui = Gui::GuiInterface();
@@ -361,16 +396,22 @@ void programmer_entry(CFGCommon_ARG* cmdarg) {
       }
       
       status = programmer.program_fpga(
-          device.cable, device, bitstreamFile, gui ? gui->Stop() : stop, 
+          /*device.cable,*/ 
+          device, 
+          bitstreamFile, 
+          gui ? gui->Stop() : stop, 
           nullptr, /*out stream*/
           [](std::string msg) {
-            std::string formatted;
-            formatted = removeInfoAndNewline(msg);
-            CFG_POST_MSG("%s", formatted.c_str());
+            //std::string formatted;
+            //formatted = removeInfoAndNewline(msg);
+            //CFG_POST_MSG("%s", formatted.c_str());
+            double percentage = ExtractNumber(msg);
+            UpdateDownloadProgress(percentage);
+            //CFG_POST_MSG("%s", msg.c_str());
           },
           progress);
       if (Gui::GuiInterface()) {
-        Gui::GuiInterface()->Status(cable, device, status);
+        Gui::GuiInterface()->Status(device.cable, device, status);
       }
       
       if (status != ProgrammerErrorCode::NoError) {
@@ -592,7 +633,7 @@ int GetFpgaStatus(const Cable& cable, const Device& device, CfgStatus& cfgStatus
   }
 
   if (!isDeviceFound) {
-    ProgrammerErrorCode::DeviceNotFound;
+    return ProgrammerErrorCode::DeviceNotFound;
   }
 
   return programmer.query_fpga_status(device, cfgStatus, outputMessage);

@@ -58,7 +58,6 @@ std::vector<Cable> HardwareManager::get_cables() {
   std::vector<Cable> cables;
 
   rc = libusb_init(&ctx);
-  rc = -999;
   CFG_ASSERT_MSG(rc == 0, "libusb_init() fail. Error: %s",
                  libusb_error_name(rc));
 

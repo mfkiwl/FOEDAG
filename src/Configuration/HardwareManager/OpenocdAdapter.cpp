@@ -110,6 +110,11 @@ CommandOutputType OpenocdAdapter::check_output(
   return NOT_OUTPUT;
 }
 
+void OpenocdAdapter::update_taplist(const std::vector<Tap>& taplist)
+{
+  m_taplist = taplist;
+}
+
 int OpenocdAdapter::program_fpga(const Device& device,
                                  const std::string& bitfile,
                                  std::atomic<bool>& stop,
@@ -149,10 +154,12 @@ int OpenocdAdapter::program_fpga(const Device& device,
           case CMD_PROGRESS: {
             double percent = std::strtod(data[0].c_str(), nullptr);
             std::ostringstream stream;
-            if (callbackProgress != nullptr) {
+            if (callbackMsg != nullptr) {
               if (percent < 100) {
+                callbackMsg(data[0]);
                 callbackProgress(data[0]);
               } else {
+                callbackMsg("99.99");
                 callbackProgress("99.99");
               }
             }
@@ -171,6 +178,7 @@ int OpenocdAdapter::program_fpga(const Device& device,
             cfg_err = 1;
             break;
           case CONFIG_SUCCESS:
+            callbackMsg("100.00");
             callbackProgress("100.00");
             cfg_success = 1;
             break;
@@ -181,6 +189,7 @@ int OpenocdAdapter::program_fpga(const Device& device,
             fsbl_boot_failure = 1;
             break;
           default:
+            //callbackMsg(line);
             break;
         }
       });
