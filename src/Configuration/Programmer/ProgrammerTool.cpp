@@ -1,3 +1,4 @@
+
 #include "ProgrammerTool.h"
 
 #include "Configuration/CFGCommon/CFGCommon.h"
@@ -5,30 +6,13 @@
 
 namespace FOEDAG {
 
-std::map<int, std::string> ErrorMessages = {
-    {NoError, "Success"},
-    {InvalidArgument, "Invalid argument"},
-    {DeviceNotFound, "Device not found"},
-    {CableNotFound, "Cable not found"},
-    {CableNotSupported, "Cable not supported"},
-    {NoSupportedTapFound, "No supported tap found"},
-    {FailedExecuteCommand, "Failed to execute command"},
-    {FailedToParseOutput, "Failed to parse output"},
-    {BitfileNotFound, "Bitfile not found"},
-    {FailedToProgramFPGA, "Failed to program FPGA"},
-    {OpenOCDExecutableNotFound, "OpenOCD executable not found"},
-    {FailedToProgramOTP, "Failed to program device OTP"},
-    {InvalidFlashSize, "Invalid flash size"},
-    {UnsupportedFunc, "Unsupported function"}};
-
 ProgrammerTool::ProgrammerTool(ProgrammingAdapter* adapter)
-    : m_adapter(adapter) {
+    : m_adapter(adapter)
+{
   CFG_ASSERT(m_adapter != nullptr);
 }
 
-ProgrammerTool::~ProgrammerTool() {
-  // Clean-up code if needed
-}
+ProgrammerTool::~ProgrammerTool() {}
 
 int ProgrammerTool::program_fpga(
     const Device& device, const std::string& bitfile, std::atomic<bool>& stop,

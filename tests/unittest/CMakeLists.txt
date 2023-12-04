@@ -90,6 +90,7 @@ target_link_libraries(unittest PRIVATE
   foedag
   foedagcore
   cfgcommon
+  hardwaremanager
   programmer
   programmer-gui)
 

@@ -44,5 +44,13 @@ struct Cable {
   TransportType transport;
   CableType cable_type;
 };
+struct CompareCable {
+  bool operator()(const Cable& a, const Cable& b) const {
+    if (a.name < b.name) return true;
+    if (a.name > b.name) return false;
+    return a.index < b.index;
+  }
+};
+
 }  // namespace FOEDAG
 #endif  // __CABLE_H__

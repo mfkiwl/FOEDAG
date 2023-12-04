@@ -57,7 +57,7 @@ add_library(
   OpenocdAdapter.cpp
 )
 target_include_directories(${subsystem} PRIVATE ${LIBUSB_INCLUDE_DIR})
-
+target_link_libraries(${subsystem} PRIVATE ${LIBUSB_LIBRARIES})
 ###################
 #
 # install 

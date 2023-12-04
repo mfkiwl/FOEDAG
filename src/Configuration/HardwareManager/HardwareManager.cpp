@@ -24,12 +24,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "Configuration/CFGCommon/CFGCommon.h"
 #include "libusb.h"
 
-// testing
-#include <chrono>
-#include <thread>
-
-#define HM_USB_DESC_LENGTH (256)
-#define HM_DEFAULT_CABLE_SPEED_KHZ (1000)
 namespace FOEDAG {
 const std::vector<HardwareManager_CABLE_INFO> HardwareManager::m_cable_db = {
     {"RsFtdi", FTDI, 0x0403, 0x6011},
@@ -58,7 +52,6 @@ std::vector<Cable> HardwareManager::get_cables() {
   std::vector<Cable> cables;
 
   rc = libusb_init(&ctx);
-  rc = -999;
   CFG_ASSERT_MSG(rc == 0, "libusb_init() fail. Error: %s",
                  libusb_error_name(rc));
 
@@ -133,24 +126,41 @@ std::vector<Cable> HardwareManager::get_cables() {
 }
 
 bool HardwareManager::is_cable_exists(uint32_t cable_index) {
+  Cable cable;
+  return is_cable_exists(cable_index, cable);
+}
+bool HardwareManager::is_cable_exists(uint32_t cable_index, Cable& out_cable) {
   for (const auto& cable : get_cables()) {
-    if (cable.index == cable_index) return true;
+    if (cable.index == cable_index) {
+      out_cable = cable;
+      return true;
+    }
   }
   return false;
 }
 
 bool HardwareManager::is_cable_exists(std::string cable_name,
                                       bool numeric_name_as_index) {
+  Cable cable;
+  return is_cable_exists(cable_name, numeric_name_as_index, cable);
+}
+
+bool HardwareManager::is_cable_exists(std::string cable_name,
+                                      bool numeric_name_as_index,
+                                      Cable& out_cable) {
   if (numeric_name_as_index) {
     bool status = false;
     uint32_t cable_index =
         (uint32_t)CFG_convert_string_to_u64(cable_name, false, &status);
     if (status) {
-      return is_cable_exists(cable_index);
+      return is_cable_exists(cable_index, out_cable);
     }
   }
   for (const auto& cable : get_cables()) {
-    if (cable.name.find(cable_name) == 0) return true;
+    if (cable.name.find(cable_name) == 0) {
+      out_cable = cable;
+      return true;
+    }
   }
   return false;
 }
@@ -259,18 +269,9 @@ std::vector<Device> HardwareManager::get_devices(const Cable& cable) {
   return devices;
 }
 
-int HardwareManager::program_fpga(Device device, std::string bitstream_filepath,
-                                  std::atomic<bool>& stop,
-                                  progress_func_type progress_callback) {
-  for (int i = 0; i <= 1000; ++i) {
-    if (progress_callback) {
-      progress_callback(i / 10.0);
-    }
-    if (stop) return -1;
-    std::this_thread::sleep_for(
-        std::chrono::milliseconds(5));  // Simulate some work
-  }
-
-  return 1;
+const std::vector<HardwareManager_DEVICE_INFO>&
+HardwareManager::get_device_db() {
+  return m_device_db;
 }
+
 }  // namespace FOEDAG

@@ -33,6 +33,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "../HardwareManager/Device.h"
 #include "../HardwareManager/Tap.h"
 
+#include "../HardwareManager/Cable.h"
+#include "../HardwareManager/Device.h"
+#include "../HardwareManager/Tap.h"
+
 struct CFGCommon_ARG;
 
 namespace FOEDAG {
@@ -54,7 +58,7 @@ namespace FOEDAG {
 //   UnsupportedFunc = -113,
 // };
 
-extern std::map<int, std::string> ErrorMessages;
+// extern std::map<int, std::string> ErrorMessages;
 
 // struct TapInfo {
 //   int index;

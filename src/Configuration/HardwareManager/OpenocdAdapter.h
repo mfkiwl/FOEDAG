@@ -77,6 +77,8 @@ class OpenocdAdapter : public JtagAdapter, public ProgrammingAdapter {
                           std::vector<std::string>& output);
   std::string get_last_output() { return m_last_output; };
 
+  void update_taplist(const std::vector<Tap>& taplist);
+
  private:
   int execute(const Cable& cable, std::string cmd, std::string& output);
   std::string convert_transport_to_string(TransportType transport,

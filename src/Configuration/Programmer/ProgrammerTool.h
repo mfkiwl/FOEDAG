@@ -7,6 +7,7 @@
 namespace FOEDAG {
 
 struct Device;
+struct Tap;
 
 enum class ProgramFlashOperation : uint32_t;
 
@@ -14,7 +15,6 @@ class ProgrammerTool : public ProgrammingAdapter {
  public:
   ProgrammerTool(ProgrammingAdapter* adapter);
   ~ProgrammerTool() override;
-
   int program_fpga(const Device& device, const std::string& bitfile,
                    std::atomic<bool>& stop, std::ostream* outStream = nullptr,
                    OutputMessageCallback callbackMsg = nullptr,
