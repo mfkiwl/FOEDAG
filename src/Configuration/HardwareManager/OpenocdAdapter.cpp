@@ -145,9 +145,10 @@ int OpenocdAdapter::program_fpga(const Device& device,
   ss << " -c \"" << cmd << "\"";
   ss << " -c \"exit\"";
 
+  std::string command = "OPENOCD_DEBUG_LEVEL=-3 " + m_openocd + ss.str();
   // run the command
   int res = CFG_execute_cmd_with_callback(
-      "OPENOCD_DEBUG_LEVEL=-3 " + m_openocd + ss.str(), m_last_output, outStream,
+      command, m_last_output, outStream,
       std::regex{}, stop, nullptr, [&](const std::string& line) {
         std::vector<std::string> data{};
         switch (check_output(line, data)) {
@@ -157,9 +158,14 @@ int OpenocdAdapter::program_fpga(const Device& device,
             if (callbackMsg != nullptr) {
               if (percent < 100) {
                 callbackMsg(data[0]);
-                callbackProgress(data[0]);
               } else {
                 callbackMsg("99.99");
+              }
+            }
+             if (callbackProgress != nullptr) {
+              if (percent < 100) {
+                callbackProgress(data[0]);
+              } else {
                 callbackProgress("99.99");
               }
             }
@@ -178,8 +184,8 @@ int OpenocdAdapter::program_fpga(const Device& device,
             cfg_err = 1;
             break;
           case CONFIG_SUCCESS:
-            callbackMsg("100.00");
-            callbackProgress("100.00");
+            if(callbackMsg != nullptr) callbackMsg("100.00");
+            if(callbackProgress != nullptr) callbackProgress("100.00");
             cfg_success = 1;
             break;
           case UNKNOWN_FIRMWARE:

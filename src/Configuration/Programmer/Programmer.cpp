@@ -87,14 +87,14 @@ std::string UpdateDownloadProgress(double percentage) {
       else progressStr << " ";
   }
 
-  progressStr << "] " << int(percentage) << " %" ;
+  progressStr << std::fixed << std::setprecision(2);
+  progressStr << "] " << percentage << " %";
   // CFG_post_msg(CFG_print("Progress....%6.2f%%", percentage),
   //                   "INFO: ", false);
   std::string debugString = progressStr.str() + "\r";
-  //CFG_POST_MSG(debugString.c_str());
-  CFG_post_msg(debugString.c_str(), "X" , false);
-  //std::cout << debugString;
-  //std::cout.flush();
+  CFG_post_msg(debugString.c_str(), "" , false);
+  std::cout << debugString;
+  std::cout.flush();
   return progressStr.str();
 }
 
@@ -371,7 +371,7 @@ void programmer_entry(CFGCommon_ARG* cmdarg) {
       std::vector<Tap> taplist{};
       //CfgStatus cfgStatus;
       std::string statusPrintOut;
-      if (!hardware_manager.is_cable_exists(cableInput, false)) {
+      if (!hardware_manager.is_cable_exists(cableInput, true)) {
         CFG_POST_ERR("Cable '%s' not found", cableInput.c_str());
         cmdarg->tclStatus = TCL_ERROR;
         return;
