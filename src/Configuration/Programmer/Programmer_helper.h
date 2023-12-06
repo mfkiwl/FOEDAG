@@ -29,7 +29,7 @@ namespace FOEDAG {
 // forward declaration
 struct Cable;
 struct Device;
-struct TapInfo;
+struct Tap;
 struct CfgStatus;
 class ProgrammerGuiInterface;
 enum class ProgramFlashOperation : uint32_t;
@@ -62,7 +62,7 @@ std::string buildScanChainCommand(const Cable& cable);
 std::string buildFpgaQueryStatusCommand(const Cable& cable,
                                         const Device& device);
 std::string buildListDeviceCommand(const Cable& cable,
-                                   const std::vector<TapInfo>& foundTapList);
+                                   const std::vector<Tap>& foundTapList);
 std::string buildFpgaProgramCommand(const Cable& cable, const Device& device,
                                     const std::string& bitstream_file);
 std::string buildOTPProgramCommand(const Cable& cable, const Device& device,
@@ -76,7 +76,7 @@ std::string buildFpgaProgramCommand(const std::string& bitstream_file,
 std::string buildFpgaQueryStatusCommand(const std::string config_file,
                                         int pld_index);
 std::string buildListDeviceCommand(const std::string config_file);
-std::string buildListDeviceCommand(const Cable& cable, const TapInfo& foundTap);
+std::string buildListDeviceCommand(const Cable& cable, const Tap& foundTap);
 std::string buildFlashProgramCommand(const std::string& bitstream_file,
                                      const std::string& config_file,
                                      int pld_index, bool doErase,
@@ -118,7 +118,7 @@ int get_string_descriptor(struct libusb_device_handle* device,
                           uint8_t desc_index, std::string& stringDesc,
                           std::string& outputMsg);
 
-std::vector<TapInfo> extractTapInfoList(const std::string& tapInfoString);
+std::vector<Tap> extractTapInfoList(const std::string& tapInfoString);
 int extractDeviceList(const std::string& deviceListString,
                       std::vector<Device>& devices);
 CfgStatus extractStatus(const std::string& statusString, bool& statusFound);

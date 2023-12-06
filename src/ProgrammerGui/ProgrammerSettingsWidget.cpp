@@ -53,9 +53,11 @@ ProgrammerSettingsWidget::ProgrammerSettingsWidget(
     ui->tableWidgetDevices->insertRow(rowIndex);
     ui->tableWidgetDevices->setItem(
         rowIndex, 0, new QTableWidgetItem{deviceInfo->dev.name()});
-    ui->tableWidgetDevices->setItem(
-        rowIndex, 1,
-        new QTableWidgetItem{ToHexString(deviceInfo->dev.tap.idcode)});
+    ui->tableWidgetDevices->setItem(rowIndex, 1,
+                                    new QTableWidgetItem{"dummy irmask"});
+    // ui->tableWidgetDevices->setItem(
+    //     rowIndex, 1,
+    //     new QTableWidgetItem{ToHexString(deviceInfo->dev.idcode)});
     // ui->tableWidgetDevices->setItem(
     //     rowIndex, 2,
     //     new QTableWidgetItem{ToHexString(deviceInfo->dev.tap.irMask)});

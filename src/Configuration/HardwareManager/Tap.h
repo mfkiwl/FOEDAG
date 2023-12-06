@@ -28,6 +28,7 @@ namespace FOEDAG {
 struct Tap {
   uint32_t index;
   uint32_t idcode;
+  uint32_t irmask;
   uint32_t irlength;
 };
 

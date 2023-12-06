@@ -339,7 +339,7 @@ std::string buildScanChainCommand(const Cable& cable) {
 }
 
 std::string buildListDeviceCommand(const Cable& cable,
-                                   const std::vector<TapInfo>& foundTapList) {
+                                   const std::vector<Tap>& foundTapList) {
   return std::string();
   // if (foundTapList.size() == 0) {
   //   return std::string{};

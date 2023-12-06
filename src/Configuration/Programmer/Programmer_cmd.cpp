@@ -25,7 +25,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "CFGCommon/CFGCommon.h"
 #include "Programmer.h"
 #include "Programmer_errror_code.h"
-#include "Programmer_errror_code.h"
 
 void progressCallback(std::string msg) { CFG_POST_MSG(msg.c_str()); }
 
