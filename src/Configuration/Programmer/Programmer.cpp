@@ -34,6 +34,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "ProgrammerGuiInterface.h"
 #include "ProgrammerTool.h"
 #include "Programmer_errror_code.h"
+#include "ProgrammerTool.h"
+#include "Programmer_errror_code.h"
 #include "Programmer_helper.h"
 #include "libusb.h"
 #include "tcl.h"
@@ -41,6 +43,7 @@ namespace FOEDAG {
 
 // openOCDPath used by library
 static std::string libOpenOcdExecPath;
+// static std::vector<TapInfo> foundTap;
 // static std::vector<TapInfo> foundTap;
 static std::map<std::string, Cable> cableMap;
 // static bool isCableMapInitialized = false;
@@ -106,6 +109,10 @@ void programmer_entry(CFGCommon_ARG* cmdarg) {
   if (arg->m_help) {
     return;
   }
+  // setup hardware manager and its depencencies
+  OpenocdAdapter openOcd{cmdarg->toolPath.string()};
+  HardwareManager hardware_manager{&openOcd};
+  ProgrammerTool programmer{&openOcd};
   // setup hardware manager and its depencencies
   OpenocdAdapter openOcd{cmdarg->toolPath.string()};
   HardwareManager hardware_manager{&openOcd};
@@ -245,7 +252,14 @@ void programmer_entry(CFGCommon_ARG* cmdarg) {
     InitLibrary(openOcdExecPath.string());
     if (subCmd == "list_device") {
       auto list_device_arg =
+      auto list_device_arg =
           static_cast<const CFGArg_PROGRAMMER_LIST_DEVICE*>(arg->get_sub_arg());
+      std::vector<Device> devices{};
+
+      if (list_device_arg->m_args.size() == 1) {
+        std::string cable_name = list_device_arg->m_args[0];
+        if (!hardware_manager.is_cable_exists(cable_name, true)) {
+          CFG_POST_ERR("Cable '%s' not found", cable_name.c_str());
       std::vector<Device> devices{};
 
       if (list_device_arg->m_args.size() == 1) {
@@ -255,14 +269,32 @@ void programmer_entry(CFGCommon_ARG* cmdarg) {
           return;
         }
         devices = hardware_manager.get_devices(cable_name, true);
+        devices = hardware_manager.get_devices(cable_name, true);
         if (!devices.empty()) {
+          processDeviceList(devices[0].cable, devices,
+                            list_device_arg->verbose);
           processDeviceList(devices[0].cable, devices,
                             list_device_arg->verbose);
           cmdarg->tclOutput =
               buildCableDevicesAliasNameWithSpaceSeparatedString(
                   devices[0].cable, devices);
+              buildCableDevicesAliasNameWithSpaceSeparatedString(
+                  devices[0].cable, devices);
         }
       } else {
+        // fild all devices
+        auto cables = hardware_manager.get_cables();
+        if (cables.empty()) {
+          CFG_POST_ERR("No cable is connected.");
+          return;
+        }
+        for (auto& cable : cables) {
+          auto devices = hardware_manager.get_devices(cable);
+          processDeviceList(cable, devices, list_device_arg->verbose);
+          cmdarg->tclOutput +=
+              buildCableDevicesAliasNameWithSpaceSeparatedString(cable,
+                                                                 devices) +
+              " ";
         // fild all devices
         auto cables = hardware_manager.get_cables();
         if (cables.empty()) {
@@ -595,7 +627,10 @@ std::string GetErrorMessage(int errorCode) {
 int GetAvailableCables(std::vector<Cable>& cables) {
   OpenocdAdapter openOcd{libOpenOcdExecPath};
   HardwareManager hardware_manager{&openOcd};
+  OpenocdAdapter openOcd{libOpenOcdExecPath};
+  HardwareManager hardware_manager{&openOcd};
   cables.clear();
+  cables = hardware_manager.get_cables();
   cables = hardware_manager.get_cables();
   return ProgrammerErrorCode::NoError;
 }
@@ -605,8 +640,15 @@ int ListDevices(const Cable& cable, std::vector<Device>& devices) {
   HardwareManager hardware_manager{&openOcd};
   if (!hardware_manager.is_cable_exists(cable.name)) {
     return ProgrammerErrorCode::CableNotFound;
+  OpenocdAdapter openOcd{libOpenOcdExecPath};
+  HardwareManager hardware_manager{&openOcd};
+  if (!hardware_manager.is_cable_exists(cable.name)) {
+    return ProgrammerErrorCode::CableNotFound;
   }
   devices.clear();
+  devices = hardware_manager.get_devices(cable);
+  if (devices.empty()) {
+    return ProgrammerErrorCode::DeviceNotFound;
   devices = hardware_manager.get_devices(cable);
   if (devices.empty()) {
     return ProgrammerErrorCode::DeviceNotFound;
@@ -772,7 +814,45 @@ int ProgramFlash(
   //                           errorMessage);
   //   return ProgrammerErrorCode::FailedExecuteCommand;
   // }
+  return ProgrammerErrorCode::NoError;
+  // if (libOpenOcdExecPath.empty()) {
+  //   return ProgrammerErrorCode::OpenOCDExecutableNotFound;
+  // }
+  // int returnCode = ProgrammerErrorCode::NoError;
+  // std::error_code ec;
+  // std::string errorMessage;
+  // if (!std::filesystem::exists(bitfile, ec)) {
+  //   errorMessage = "Cannot find bitfile: " + bitfile + ". " + ec.message();
+  //   returnCode = ProgrammerErrorCode::BitfileNotFound;
+  //   addOrUpdateErrorMessage(returnCode, errorMessage);
+  //   return returnCode;
+  // }
+  // std::string cmdOutput;
+  // std::string programFlashCommand =
+  //     libOpenOcdExecPath +
+  //     buildFlashProgramCommand(cable, device, bitfile, modes);
+  // std::string progressPercentagePattern = "\\d{1,3}\\.\\d{2}";
+  // std::regex regexPattern(progressPercentagePattern);
+  // returnCode = CFG_execute_cmd_with_callback(programFlashCommand, cmdOutput,
+  //                                            outStream, regexPattern, stop,
+  //                                            callbackProgress, callbackMsg);
+  // if (returnCode) {
+  //   errorMessage = "Failed to execute following command " +
+  //                  programFlashCommand +
+  //                  ". Error code: " + std::to_string(returnCode) + "\n";
+  //   errorMessage += "ProgramFlash() failed.\n";
+  //   addOrUpdateErrorMessage(ProgrammerErrorCode::FailedExecuteCommand,
+  //                           errorMessage);
+  //   return ProgrammerErrorCode::FailedExecuteCommand;
+  // }
 
+  // // when programming done, openocd will print out "loaded file"
+  // // loaded file /home/user1/abc.bin to device 0 in 5s 90381us
+  // size_t pos = cmdOutput.find("loaded file");
+  // if (pos == std::string::npos) {
+  //   returnCode = ProgrammerErrorCode::FailedToProgramFPGA;
+  // }
+  // return 0;
   // // when programming done, openocd will print out "loaded file"
   // // loaded file /home/user1/abc.bin to device 0 in 5s 90381us
   // size_t pos = cmdOutput.find("loaded file");
