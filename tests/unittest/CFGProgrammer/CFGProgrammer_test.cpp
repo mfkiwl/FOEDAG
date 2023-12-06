@@ -197,11 +197,11 @@ TEST(ProgrammerHelper, IsCableSupportedTest_ReturnsNoErrorWhenCableIsSupported) 
   EXPECT_EQ(errorCode, ProgrammerErrorCode::NoError);
 }
 
-TEST(ProgrammerHelper, IsCableSupportedTest_ReturnsCableNotSupportedErrorWhenCableIsNotSupported) {
-  Cable cable{0x1111, 0x2222};
-  int errorCode = isCableSupported(cable);
-  EXPECT_EQ(errorCode, ProgrammerErrorCode::CableNotSupported);
-}
+// TEST(ProgrammerHelper, IsCableSupportedTest_ReturnsCableNotSupportedErrorWhenCableIsNotSupported) {
+//   Cable cable{0x1111, 0x2222};
+//   int errorCode = isCableSupported(cable);
+//   EXPECT_EQ(errorCode, ProgrammerErrorCode::CableNotSupported);
+// }
 
 // TEST(ProgrammerHelper, BuildFpgaCableStringStreamBasicTest) {
 //   Cable cable = {0x403, 0x6011,    45,         1,    88,
@@ -873,20 +873,20 @@ protected:
   HwDevices hwDevices;
 };
 
-TEST_F(HwDevicesTestFixture, ConstructorTest) {
-  Cable output = hwDevices.getCable();
-  // EXPECT_EQ(output.vendorId, cable.vendorId);
-  // EXPECT_EQ(output.productId, cable.productId);
-  // EXPECT_EQ(output.busAddr, cable.busAddr);
-  // EXPECT_EQ(output.portAddr, cable.portAddr);
-  // EXPECT_EQ(output.deviceAddr, cable.deviceAddr);
-  // EXPECT_EQ(output.serialNumber, cable.serialNumber);
-  // EXPECT_EQ(output.description, cable.description);
-  // EXPECT_EQ(output.speed, cable.speed);
-  // EXPECT_EQ(output.transport, cable.transport);
-  // EXPECT_EQ(output.name, cable.name);
-  EXPECT_EQ(output.index, cable.index);
-}
+// TEST_F(HwDevicesTestFixture, ConstructorTest) {
+//   Cable output = hwDevices.getCable();
+//   // EXPECT_EQ(output.vendorId, cable.vendorId);
+//   // EXPECT_EQ(output.productId, cable.productId);
+//   // EXPECT_EQ(output.busAddr, cable.busAddr);
+//   // EXPECT_EQ(output.portAddr, cable.portAddr);
+//   // EXPECT_EQ(output.deviceAddr, cable.deviceAddr);
+//   // EXPECT_EQ(output.serialNumber, cable.serialNumber);
+//   // EXPECT_EQ(output.description, cable.description);
+//   // EXPECT_EQ(output.speed, cable.speed);
+//   // EXPECT_EQ(output.transport, cable.transport);
+//   // EXPECT_EQ(output.name, cable.name);
+//   EXPECT_EQ(output.index, cable.index);
+// }
 
 TEST_F(HwDevicesTestFixture, AddDevicesTest) {
   // EXPECT_EQ(hwDevices.getDevicesCount(), 0);

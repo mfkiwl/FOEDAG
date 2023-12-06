@@ -1,4 +1,7 @@
+
 #include "ProgrammerTool.h"
+
+#include <map>
 
 #include "Configuration/CFGCommon/CFGCommon.h"
 #include "Programmer_errror_code.h"
