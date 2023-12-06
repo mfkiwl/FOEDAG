@@ -31,9 +31,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 using namespace FOEDAG;
 
-TEST(ProgrammerHelper, TransportTypeToStringTest_JtagTransport) {
-  EXPECT_EQ("jtag", FOEDAG::transportTypeToString(FOEDAG::TransportType::JTAG));
-}
 
 TEST(ProgrammerHelper, FindStringPatternBasicTest1) {
   std::string input = "hello world";
@@ -188,403 +185,6 @@ TEST(ProgrammerHelper, ExtractStatusInvalidInputTest) {
   EXPECT_EQ(expectedStatus.cfgError, actualStatus.cfgError);
 }
 
-TEST(ProgrammerHelper, IsCableSupportedTest_ReturnsNoErrorWhenCableIsSupported) {
-  Cable cable1{0x0403, 0x6011};
-  Cable cable2{0x0403, 0x6010};
-  int errorCode = isCableSupported(cable1);
-  errorCode = isCableSupported(cable2);
-  EXPECT_EQ(errorCode, ProgrammerErrorCode::NoError);
-  EXPECT_EQ(errorCode, ProgrammerErrorCode::NoError);
-}
-
-// TEST(ProgrammerHelper, IsCableSupportedTest_ReturnsCableNotSupportedErrorWhenCableIsNotSupported) {
-//   Cable cable{0x1111, 0x2222};
-//   int errorCode = isCableSupported(cable);
-//   EXPECT_EQ(errorCode, ProgrammerErrorCode::CableNotSupported);
-// }
-
-// TEST(ProgrammerHelper, BuildFpgaCableStringStreamBasicTest) {
-//   Cable cable = {0x403, 0x6011,    45,         1,    88,
-//                  3,     "F-M14D5", "lopopolo", 2000, TransportType::JTAG};
-//   std::stringstream expected;
-//   expected << std::hex << std::showbase;
-//   expected << " -c \"adapter driver ftdi\""
-//            << " -c \"adapter serial " << cable.serialNumber << "\""
-//            << " -c \"ftdi vid_pid " << cable.vendorId << " " << cable.productId
-//            << "\""
-//            << " -c \"ftdi layout_init 0x0c08 0x0f1b\"";
-//   expected << std::dec << std::noshowbase;
-//   expected << " -c \"adapter speed " << cable.speed << "\""
-//            << " -c \"transport select "
-//            << transportTypeToString(cable.transport) << "\"";
-
-//   std::stringstream actual = buildFpgaCableStringStream(cable);
-
-//   EXPECT_EQ(expected.str(), actual.str());
-// }
-
-// TEST(ProgrammerHelper, BuildFpgaCableStringStreamSerialNumEmptyTest) {
-//   Cable cable = {0x403, 0x6011,    45,         1,    88,
-//                  3,     "", "lopopolo", 2000, TransportType::JTAG};
-//   std::stringstream expected;
-//   expected << std::hex << std::showbase;
-//   expected << " -c \"adapter driver ftdi\""
-//            << " -c \"ftdi vid_pid " << cable.vendorId << " " << cable.productId
-//            << "\""
-//            << " -c \"ftdi layout_init 0x0c08 0x0f1b\"";
-//   expected << std::dec << std::noshowbase;
-//   expected << " -c \"adapter speed " << cable.speed << "\""
-//            << " -c \"transport select "
-//            << transportTypeToString(cable.transport) << "\"";
-
-//   std::stringstream actual = buildFpgaCableStringStream(cable);
-
-//   EXPECT_EQ(expected.str(), actual.str());
-// }
-
-TEST(ProgrammerHelper, BuildFpgaTargetStringStreamBasicTest) {
-  // Device device = {0,
-  //                  "DeviceXZ",
-  //                  16384,
-  //                  {11, "DeviceXZ", true, 0x1234AABB, 0x1234AABB, 5, 0x1, 0x3}};
-  // std::stringstream expected;
-  // expected << " -c \"jtag newtap " << device.name << device.index
-  //          << " tap -irlen " << device.tapInfo.irLen << " -expected-id 0x"
-  //          << std::hex << device.tapInfo.expected << "\"";
-  // expected << std::dec;
-  // expected << " -c \"target create " << device.name << device.index
-  //          << " riscv -endian little -chain-position " << device.name
-  //          << device.index << ".tap\"";
-  // expected << " -c \"pld device gemini " << device.name << device.index << "\"";
-  // std::stringstream actual = buildFpgaTargetStringStream(device);
-
-  // EXPECT_EQ(expected.str(), actual.str());
-}
-
-TEST(ProgrammerHelper, BuildInitEndStringWithCommandBasicTest) {
-  std::string command = "programming-x";
-  std::string expected =
-      " -c \"init\" -c \"programming-x\" -l /dev/stdout -c \"exit\"";
-  std::string actual = buildInitEndStringWithCommand(command);
-  EXPECT_EQ(expected, actual);
-}
-
-TEST(ProgrammerHelper, BuildFpgaCableCommandBasicTest) {
-  // Cable cable = {0x403, 0x6011,       0,          1,    2,
-  //                3,     "CSJ01222DM", "kikilala", 9600, TransportType::JTAG};
-  // std::string command = "test_command";
-  // std::string expected = buildFpgaCableStringStream(cable).str() +
-  //                        " -c \"init\""
-  //                        " -c \"" +
-  //                        command +
-  //                        "\""
-  //                        " -l /dev/stdout"
-  //                        " -c \"exit\"";
-
-  // std::string actual = buildFpgaCableCommand(cable, command);
-
-  // EXPECT_EQ(expected, actual);
-}
-
-TEST(ProgrammerHelper, BuildScanChainCommandBasicTest) {
-  // Cable cable = {0x403,
-  //                0x6011,
-  //                11,
-  //                22,
-  //                33,
-  //                1,
-  //                "serial_number_xyz",
-  //                "description_xyz",
-  //                10000,
-  //                TransportType::JTAG,
-  //                "RsFtdi_1_1",
-  //                1};
-  // std::string expected =
-  //     " -c \"adapter driver ftdi\""
-  //     " -c \"adapter serial serial_number_xyz\""
-  //     " -c \"ftdi vid_pid 0x403 0x6011\""
-  //     " -c \"ftdi layout_init 0x0c08 0x0f1b\""
-  //     " -c \"adapter speed 10000\""
-  //     " -c \"transport select jtag\""
-  //     " -c \"init\" -c \"scan_chain\" -l /dev/stdout -c \"exit\"";
-  // std::string actual = buildScanChainCommand(cable);
-  // EXPECT_EQ(expected, actual);
-}
-
-TEST(ProgrammerHelper, BuildListDeviceCommandBasicTest) {
-  // Cable cable = {0x403,
-  //                0x6011,
-  //                11,
-  //                22,
-  //                33,
-  //                1,
-  //                "serial_number_xyz",
-  //                "description_xyz",
-  //                10000,
-  //                TransportType::JTAG};
-  // std::vector<TapInfo> foundTapList = {
-  //     {0, "Gemini", true, 0x20000913, 0x20000913, 0x5, 0x1, 0x3}};
-  // std::string expected =
-  //     " -c \"adapter driver ftdi\""
-  //     " -c \"adapter serial serial_number_xyz\""
-  //     " -c \"ftdi vid_pid 0x403 0x6011\""
-  //     " -c \"ftdi layout_init 0x0c08 0x0f1b\""
-  //     " -c \"adapter speed 10000\" -c \"transport select jtag\""
-  //     " -c \"jtag newtap Gemini0 tap -irlen 5 -expected-id 0x20000913\""
-  //     " -c \"target create Gemini0 riscv -endian little -chain-position "
-  //     "Gemini0.tap\""
-  //     " -c \"pld device gemini Gemini0\""
-  //     " -c \"init\" -c \"gemini list\" -l /dev/stdout -c \"exit\"";
-  // std::string actual = buildListDeviceCommand(cable, foundTapList);
-  // EXPECT_EQ(expected, actual);
-}
-
-TEST(ProgrammerHelper, BuildListDeviceCommandNoTapsTest) {
-  // Cable cable = {0x403,
-  //                0x6011,
-  //                11,
-  //                22,
-  //                33,
-  //                1,
-  //                "serial_number_xyz",
-  //                "description_xyz",
-  //                10000,
-  //                TransportType::JTAG, 
-  //                "RsFtdi_1_1",
-  //                1};
-  // std::vector<TapInfo> foundTapList = {};
-  // std::string expected = "";
-  // std::string actual = buildListDeviceCommand(cable, foundTapList);
-  // EXPECT_EQ(expected, actual);
-}
-
-class BuildFlashProgramCommandTest
-    : public testing::TestWithParam<std::tuple<
-          std::string, std::string, int, bool, bool, bool, bool, std::string>> {
-};
-
-TEST_P(BuildFlashProgramCommandTest, BuildFlashProgramCommandTest) {
-  // std::string bitstream_file = std::get<0>(GetParam());
-  // std::string config_file = std::get<1>(GetParam());
-  // int pld_index = std::get<2>(GetParam());
-  // bool doErase = std::get<3>(GetParam());
-  // bool doBlankCheck = std::get<4>(GetParam());
-  // bool doProgram = std::get<5>(GetParam());
-  // bool doVerify = std::get<6>(GetParam());
-  // std::string expected = std::get<7>(GetParam());
-  // std::string actual =
-  //     buildFlashProgramCommand(bitstream_file, config_file, pld_index, doErase,
-  //                              doBlankCheck, doProgram, doVerify);
-  // EXPECT_EQ(expected, actual);
-}
-
-INSTANTIATE_TEST_SUITE_P(
-    ProgrammerHelper, BuildFlashProgramCommandTest,
-    testing::Values(
-        std::make_tuple("bitstream.bin", "config.cfg", 0, true, true, true,
-                        true,
-                        " -f config.cfg -c \"gemini load 0 flash bitstream.bin "
-                        "-p 1\" -l /dev/stdout -c exit"),
-        std::make_tuple("bitstream2.bin", "config2.cfg", 1, false, false, false,
-                        false,
-                        " -f config2.cfg -c \"gemini load 1 flash "
-                        "bitstream2.bin -p 1\" -l /dev/stdout -c exit"),
-        std::make_tuple("bitstream3.bin", "config3.cfg", 2, true, false, true,
-                        false,
-                        " -f config3.cfg -c \"gemini load 2 flash "
-                        "bitstream3.bin -p 1\" -l /dev/stdout -c exit")));
-
-TEST(ProgrammerHelper, BuildFpgaQueryStatusCommandBasicTest) {
-  // Cable cable = {0x403,
-  //                0x6011,
-  //                11,
-  //                22,
-  //                33,
-  //                1,
-  //                "serial_number_xyz",
-  //                "description_xyz",
-  //                10000,
-  //                TransportType::JTAG,
-  //                "RsFtdi_1_1",
-  //                1};
-  // Device device = {0,
-  //                  "DeviceXZ",
-  //                  16384,
-  //                  {99, "DeviceXZ", true, 0x1234AABB, 0x1234AABB, 5, 0x1, 0x3}};
-  // std::string expected =
-  //     " -c \"adapter driver ftdi\""
-  //     " -c \"adapter serial serial_number_xyz\""
-  //     " -c \"ftdi vid_pid 0x403 0x6011\""
-  //     " -c \"ftdi layout_init 0x0c08 0x0f1b\""
-  //     " -c \"adapter speed 10000\" -c \"transport select jtag\""
-  //     " -c \"jtag newtap DeviceXZ0 tap -irlen 5 -expected-id 0x1234aabb\""
-  //     " -c \"target create DeviceXZ0 riscv -endian little -chain-position "
-  //     "DeviceXZ0.tap\""
-  //     " -c \"pld device gemini DeviceXZ0\""
-  //     " -c \"init\" -c \"gemini status 0\" -l /dev/stdout -c \"exit\"";
-  // std::string actual = buildFpgaQueryStatusCommand(cable, device);
-  // EXPECT_EQ(expected, actual);
-}
-
-TEST(ProgrammerHelper, BuildFpgaProgramCommandBasicTest) {
-  // Cable cable = {0x403,
-  //                0x6011,
-  //                11,
-  //                22,
-  //                33,
-  //                1,
-  //                "serial_number_xyz",
-  //                "description_xyz",
-  //                10000,
-  //                TransportType::JTAG,
-  //                "RsFtdi_1_1",
-  //                1};
-  // Device device = {0,
-  //                  "Gemini",
-  //                  16384,
-  //                  {99, "Gemini", true, 0x1234AABB, 0x1234AABB, 5, 0x1, 0x3}};
-  // std::string bitfile = "my_bitstreamfile.bit";
-  // std::string expected =
-  //     " -c \"adapter driver ftdi\" -c \"adapter serial serial_number_xyz\""
-  //     " -c \"ftdi vid_pid 0x403 0x6011\" -c \"ftdi layout_init 0x0c08 0x0f1b\""
-  //     " -c \"adapter speed 10000\" -c \"transport select jtag\""
-  //     " -c \"jtag newtap Gemini0 tap -irlen 5 -expected-id 0x1234aabb\""
-  //     " -c \"target create Gemini0 riscv -endian little -chain-position "
-  //     "Gemini0.tap\""
-  //     " -c \"pld device gemini Gemini0\" -c \"init\""
-  //     " -c \"gemini load 0 fpga my_bitstreamfile.bit -p 1\" -l /dev/stdout -c "
-  //     "\"exit\"";
-  // std::string actual = buildFpgaProgramCommand(cable, device, bitfile);
-  // EXPECT_EQ(expected, actual);
-}
-
-TEST(ProgrammerHelper, BuildOTPProgramCommandBasicTest) {
-  // Cable cable = {0x403,
-  //                0x6011,
-  //                11,
-  //                22,
-  //                33,
-  //                1,
-  //                "serial_number_xyz",
-  //                "description_xyz",
-  //                10000,
-  //                TransportType::JTAG,
-  //                "RsFtdi_1_1",
-  //                1};
-  // Device device = {0,
-  //                  "Gemini",
-  //                  16384,
-  //                  {99, "Gemini", true, 0x1234AABB, 0x1234AABB, 5, 0x1, 0x3}};
-  // std::string bitfile = "my_bitstreamfile.bit";
-  // std::string expected =
-  //     " -c \"adapter driver ftdi\" -c \"adapter serial serial_number_xyz\""
-  //     " -c \"ftdi vid_pid 0x403 0x6011\" -c \"ftdi layout_init 0x0c08 0x0f1b\""
-  //     " -c \"adapter speed 10000\" -c \"transport select jtag\""
-  //     " -c \"jtag newtap Gemini0 tap -irlen 5 -expected-id 0x1234aabb\""
-  //     " -c \"target create Gemini0 riscv -endian little -chain-position "
-  //     "Gemini0.tap\""
-  //     " -c \"pld device gemini Gemini0\" -c \"init\""
-  //     " -c \"gemini load 0 otp my_bitstreamfile.bit -p 1\" -l /dev/stdout -c "
-  //     "\"exit\"";
-  // std::string actual = buildOTPProgramCommand(cable, device, bitfile);
-  // EXPECT_EQ(expected, actual);
-}
-
-class BuildFpgaProgramCommandTest
-    : public testing::TestWithParam<
-          std::tuple<std::string, std::string, int, std::string>> {};
-
-TEST_P(BuildFpgaProgramCommandTest, Test) {
-  std::string bitstream_file = std::get<0>(GetParam());
-  std::string config_file = std::get<1>(GetParam());
-  int pld_index = std::get<2>(GetParam());
-  std::string expected = std::get<3>(GetParam());
-  std::string actual =
-      buildFpgaProgramCommand(bitstream_file, config_file, pld_index);
-  EXPECT_EQ(expected, actual);
-}
-
-INSTANTIATE_TEST_SUITE_P(
-    ProgrammerHelper, BuildFpgaProgramCommandTest,
-    testing::Values(
-        std::make_tuple(
-            "bitstream.bin", "config.cfg", 0,
-            " -f config.cfg -c \"gemini load 0 fpga bitstream.bin -p 1\""
-            " -l /dev/stdout -c exit"),
-        std::make_tuple(
-            "other_bitstream.bin", "config.cfg", 0,
-            " -f config.cfg -c \"gemini load 0 fpga other_bitstream.bin -p 1\""
-            " -l /dev/stdout -c exit"),
-        std::make_tuple(
-            "bitstream.bin", "other_config.cfg", 0,
-            " -f other_config.cfg -c \"gemini load 0 fpga bitstream.bin -p 1\""
-            " -l /dev/stdout -c exit"),
-        std::make_tuple(
-            "bitstream.bin", "config.cfg", 2,
-            " -f config.cfg -c \"gemini load 2 fpga bitstream.bin -p 1\""
-            " -l /dev/stdout -c exit")));
-
-TEST(ProgrammerHelper, BuildFlashProgramCommandBasicTest) {
-  // Cable cable = {0x403,
-  //                0x6011,
-  //                11,
-  //                22,
-  //                33,
-  //                1,
-  //                "serial_number_aaa",
-  //                "description_bbb",
-  //                10000,
-  //                TransportType::JTAG,
-  //                "RsFtdi_1_1",
-  //                1};
-  // Device device = {0,
-  //                  "Pluto",
-  //                  16384,
-  //                  {99, "Pluto", true, 0x1234AABB, 0x1234AABB, 5, 0x1, 0x3}};
-  // ProgramFlashOperation modes = {ProgramFlashOperation::BlankCheck|
-  //                                ProgramFlashOperation::Erase|
-  //                                ProgramFlashOperation::Program|
-  //                                ProgramFlashOperation::Verify};
-  // std::string bitfile = "my_bitstream_flash_file.bit";
-  // std::string expected =
-  //     " -c \"adapter driver ftdi\" -c \"adapter serial serial_number_aaa\""
-  //     " -c \"ftdi vid_pid 0x403 0x6011\" -c \"ftdi layout_init 0x0c08 0x0f1b\""
-  //     " -c \"adapter speed 10000\" -c \"transport select jtag\""
-  //     " -c \"jtag newtap Pluto0 tap -irlen 5 -expected-id 0x1234aabb\""
-  //     " -c \"target create Pluto0 riscv -endian little -chain-position "
-  //     "Pluto0.tap\""
-  //     " -c \"pld device gemini Pluto0\" -c \"init\""
-  //     " -c \"gemini load 0 flash my_bitstream_flash_file.bit -p 1\" -l /dev/stdout -c "
-  //     "\"exit\"";
-  // std::string actual = buildFlashProgramCommand(cable, device, bitfile, modes);
-  // EXPECT_EQ(expected, actual);
-}
-
-class BuildFpgaQueryStatusCommandTest
-    : public testing::TestWithParam<std::tuple<std::string, int, std::string>> {
-};
-
-TEST_P(BuildFpgaQueryStatusCommandTest, Test) {
-  std::string config_file = std::get<0>(GetParam());
-  int pld_index = std::get<1>(GetParam());
-  std::string expected = std::get<2>(GetParam());
-  std::string actual = buildFpgaQueryStatusCommand(config_file, pld_index);
-  EXPECT_EQ(expected, actual);
-}
-
-INSTANTIATE_TEST_SUITE_P(
-    ProgrammerHelper, BuildFpgaQueryStatusCommandTest,
-    testing::Values(
-        std::make_tuple(
-            "config.cfg", 0,
-            " -f config.cfg -c \"gemini status 0\" -l /dev/stdout -c exit"),
-        std::make_tuple(
-            "config.cfg", 2,
-            " -f config.cfg -c \"gemini status 2\" -l /dev/stdout -c exit"),
-        std::make_tuple("other_config.cfg", 0,
-                        " -f other_config.cfg -c \"gemini status 0\" -l "
-                        "/dev/stdout -c exit")));
-
 class ParseOperationStringTest
     : public testing::TestWithParam<
           std::tuple<std::string, std::vector<std::string>>> {};
@@ -676,31 +276,31 @@ protected:
 
 TEST_F(ProgrammerAPI, GetAvailableCables_ReturnsNoErrorWhenSuccessful) {
   // expect no cable is connected in CI testing environment
-  // std::vector<Cable> cables;
-  // int errorCode = GetAvailableCables(cables);
-  // EXPECT_EQ(cables.size(), 0);
-  // EXPECT_EQ(errorCode, ProgrammerErrorCode::NoError);
+  std::vector<Cable> cables;
+  int errorCode = GetAvailableCables(cables);
+  EXPECT_EQ(cables.size(), 0);
+  EXPECT_EQ(errorCode, ProgrammerErrorCode::NoError);
 }
 
 TEST_F(ProgrammerAPI, ListDevicesTest_ReturnsCableNotSupportedWhenCableIsDefaultValue) {
   // expect no cable is connected in CI testing environment
   // expect no device is connected in CI testing environment
-  // Cable cable;
-  // std::vector<Device> devices;
-  // int errorCode = ListDevices(cable, devices);
-  // EXPECT_EQ(devices.size(), 0);
-  // EXPECT_EQ(errorCode, ProgrammerErrorCode::CableNotSupported);
+  Cable cable;
+  std::vector<Device> devices;
+  int errorCode = ListDevices(cable, devices);
+  EXPECT_EQ(devices.size(), 0);
+  EXPECT_EQ(errorCode, ProgrammerErrorCode::CableNotFound);
 }
 
 TEST_F(ProgrammerAPI, GetFpgaStatusTest_ReturnsCableNotSupportedWhenCableIsDefaultValue) {
   // expect no cable is connected in CI testing environment
   // expect no device is connected in CI testing environment
-  // Cable cable;
-  // Device device;
-  // CfgStatus status;
-  // std::string statusCmdOutput;
-  // int errorCode = GetFpgaStatus(cable, device, status, statusCmdOutput);
-  // EXPECT_EQ(errorCode, ProgrammerErrorCode::CableNotSupported);
+  Cable cable;
+  Device device;
+  CfgStatus status;
+  std::string statusCmdOutput;
+  int errorCode = GetFpgaStatus(cable, device, status, statusCmdOutput);
+  EXPECT_EQ(errorCode, ProgrammerErrorCode::CableNotFound);
 }
 class ProgrammerAPI_ProgramFlashAndFpga : public ::testing::Test {
  protected:
@@ -773,84 +373,71 @@ TEST_F(ProgrammerAPI_ProgramFlashAndFpga, ProgramFlashBitfileNotFoundTest) {
   // int actual = ProgramFlash(cable, device, bitfile, stop, modes, nullptr, nullptr, nullptr);
   // EXPECT_EQ(expected, actual);
 }
-
-TEST(ProgrammerHelper, InitializeHwDb) {
-  // in CI, no cable is connected
-  // std::vector<HwDevices> cableDeviceDb;
-  // std::map<std::string, Cable> cableMap;
-  // testing::internal::CaptureStdout();
-  // InitializeHwDb(cableDeviceDb, cableMap, false);
-  // std::string output = testing::internal::GetCapturedStdout();
-  // std::string expected = "INFO: No cable found.\n";
-  // EXPECT_EQ(output, expected);
-}
 #endif // __linux__
 
 TEST(ProgrammerHelper, printCableListTest)
 {
-  // std::vector<Cable> cableList{{0x403, 0x6011, 2, 8, 33, 1, "serial_number_xyz", "description_xyz", 10000, TransportType::JTAG, "RsFtdi_2_8", 1}};
-  // testing::internal::CaptureStdout();
-  // printCableList(cableList, true);
-  // std::string output = testing::internal::GetCapturedStdout();
-  // std::string expected = 
-  // "INFO: Cable            \n"
-  // "INFO: -----------------\n"
-  // "INFO: (1) RsFtdi_2_8\n";
+  std::vector<Cable> cableList {{1, 0x403, 0x6011, 2, 8, 33, 1, 10000, "serial_number_xyz", "description_xyz", "RsFtdi_2_8", TransportType::JTAG, CableType::FTDI}};
+  testing::internal::CaptureStdout();
+  printCableList(cableList, true);
+  std::string output = testing::internal::GetCapturedStdout();
+  std::string expected = 
+  "INFO: Cable            \n"
+  "INFO: -----------------\n"
+  "INFO: (1) RsFtdi_2_8\n";
 
-  // EXPECT_EQ(output, expected);
+  EXPECT_EQ(output, expected);
 }
 
 TEST(ProgrammerHelper, PrintDeviceListNoDeviceTest) {
-  // Cable cable{0x403, 0x6011, 1, 2, 33, 1, "serial_number_xyz", "description_xyz", 10000, TransportType::JTAG, "RsFtdi_1_2", 1};
-  // testing::internal::CaptureStdout();
-  // std::vector<Device> deviceList{};
-  // printDeviceList(cable, deviceList, true);
-  // std::string output = testing::internal::GetCapturedStdout();
-  // std::string expected = 
-  // "INFO: Cable                       | Device            | Flash Size\n"
-  // "INFO: -------------------------------------------------------------\n"
-  // "INFO:   No device detected.\n";
-  // EXPECT_EQ(output, expected);
+  Cable cable {1, 0x403, 0x6011, 1, 2, 33, 1, 10000, "serial_number_xyz", "description_xyz", "RsFtdi_1_2", TransportType::JTAG, CableType::FTDI};
+  testing::internal::CaptureStdout();
+  std::vector<Device> deviceList{};
+  printDeviceList(cable, deviceList, true);
+  std::string output = testing::internal::GetCapturedStdout();
+  std::string expected = 
+  "INFO:   No device is detected.\n";
+  EXPECT_EQ(output, expected);
 }
 
 TEST(ProgrammerHelper, PrintDeviceListSimpleTest) {
-  // Cable cable{0x403, 0x6011, 1, 2, 33, 1, "serial_number_xyz", "description_xyz", 10000, TransportType::JTAG, "RsFtdi_1_2", 1};
-  // std::vector<Device> deviceList{
-  //   {1, "Device1", 16384, {1, "Device1.Tap", true, 0x1234AABB, 0x1234AABB, 5, 0x1, 0x3}},
-  //   {2, "Gemini2", 16384, {2, "Device2.Tap", true, 0x1234AABB, 0x1234AABB, 5, 0x1, 0x3}}};
-  // testing::internal::CaptureStdout();
-  // printDeviceList(cable, deviceList, true);
-  // std::string output = testing::internal::GetCapturedStdout();
-  // std::string expected =
-  // "INFO: Cable                       | Device            | Flash Size\n"
-  // "INFO: -------------------------------------------------------------\n"
-  // "INFO: (1) RsFtdi_1_2                (1) Device1         16K               \n"
-  // "INFO: (1) RsFtdi_1_2                (2) Gemini2         16K               \n";
-  // EXPECT_EQ(output, expected);
+  Cable cable{1, 0x403, 0x6011, 1, 2, 33, 1, 10000, "serial_number_xyz", "description_xyz", "RsFtdi_1_2", TransportType::JTAG, CableType::FTDI};
+  std::vector<Device> deviceList{
+    {1, "Device1", 16384, DeviceType::GEMINI, cable, {1, 0x1234AABB, 5}},
+    {2, "Gemini2", 16384, DeviceType::GEMINI, cable, {1, 0x1234AABC, 5}}};
+  testing::internal::CaptureStdout();
+  printDeviceList(cable, deviceList, true);
+  std::string output = testing::internal::GetCapturedStdout();
+  std::string expected =
+  "INFO: Cable                       | Device            | Flash Size\n"
+  "INFO: -------------------------------------------------------------\n"
+  "INFO: (1) RsFtdi_1_2                (1) Device1         16K               \n"
+  "INFO: (1) RsFtdi_1_2                (2) Gemini2         16K               \n";
+  EXPECT_EQ(output, expected);
 }
 
 TEST(ProgrammerHelper, BuildCableDeviceAliasNameTest) {
-  // Cable cable{0x403, 0x6011, 1, 2, 33, 1, "serial_number_xyz", "description_xyz", 10000, TransportType::JTAG, "RsFtdi_1_2", 1};
-  // std::vector<Device> deviceList{
-  //   {1, "Device1", 16384, {1, "Device1.Tap", true, 0x1234AABB, 0x1234AABB, 5, 0x1, 0x3}},
-  //   {2, "Gemini2", 16384, {2, "Device2.Tap", true, 0x1234AABB, 0x1234AABB, 5, 0x1, 0x3}}};
-  // std::string output = buildCableDeviceAliasName(cable, deviceList[0]);
-  // std::string expected = "RsFtdi_1_2-" + deviceList[0].name + "<" + std::to_string(deviceList[0].index) + ">-" + "16KB";
-  // EXPECT_EQ(output, expected);
-  // output = buildCableDeviceAliasName(cable, deviceList[1]);
-  // expected = "RsFtdi_1_2-" + deviceList[1].name + "<" + std::to_string(deviceList[1].index) + ">-" + "16KB";
-  // EXPECT_EQ(output, expected);
+  Cable cable{1, 0x403, 0x6011, 1, 2, 33, 1, 10000, "serial_number_xyz", "description_xyz", "RsFtdi_1_2", TransportType::JTAG, CableType::FTDI};
+  std::vector<Device> deviceList{
+    {1, "Device1", 16384, DeviceType::GEMINI, cable, {1, 0x1234AABB, 5}},
+    {2, "Gemini2", 16384, DeviceType::GEMINI, cable, {1, 0x1234AABC, 5}}};
+  std::string output = buildCableDeviceAliasName(cable, deviceList[0]);
+  std::string expected = "RsFtdi_1_2-" + deviceList[0].name + "<" + std::to_string(deviceList[0].index) + ">-" + "16KB";
+  EXPECT_EQ(output, expected);
+  output = buildCableDeviceAliasName(cable, deviceList[1]);
+  expected = "RsFtdi_1_2-" + deviceList[1].name + "<" + std::to_string(deviceList[1].index) + ">-" + "16KB";
+  EXPECT_EQ(output, expected);
 }
 
 TEST(ProgrammerHelper, buildCableDevicesAliasNameWithSpaceSeparatedString) {
-  // Cable cable{0x403, 0x6011, 1, 2, 33, 1, "serial_number_xyz", "description_xyz", 10000, TransportType::JTAG, "RsFtdi_1_2", 1};
-  // std::vector<Device> deviceList{
-  //   {1, "Device1", 16384, {1, "Device1.Tap", true, 0x1234AABB, 0x1234AABB, 5, 0x1, 0x3}},
-  //   {2, "Gemini2", 16384, {2, "Device2.Tap", true, 0x1234AABB, 0x1234AABB, 5, 0x1, 0x3}}};
-  // std::string output = buildCableDevicesAliasNameWithSpaceSeparatedString(cable, deviceList);
-  // std::string expected = "RsFtdi_1_2-" + deviceList[0].name + "<" + std::to_string(deviceList[0].index) + ">-" + "16KB"
-  //  + " RsFtdi_1_2-" + deviceList[1].name + "<" + std::to_string(deviceList[1].index) + ">-" + "16KB";
-  // EXPECT_EQ(output, expected);
+  Cable cable{1, 0x403, 0x6011, 1, 2, 33, 1, 10000, "serial_number_xyz", "description_xyz", "RsFtdi_1_2", TransportType::JTAG, CableType::FTDI};
+  std::vector<Device> deviceList{
+    {1, "Device1", 16384, DeviceType::GEMINI, cable, {1, 0x1234AABB, 5}},
+    {2, "Gemini2", 16384, DeviceType::GEMINI, cable, {1, 0x1234AABC, 5}}};
+  std::string output = buildCableDevicesAliasNameWithSpaceSeparatedString(cable, deviceList);
+  std::string expected = "RsFtdi_1_2-" + deviceList[0].name + "<" + std::to_string(deviceList[0].index) + ">-" + "16KB"
+   + " RsFtdi_1_2-" + deviceList[1].name + "<" + std::to_string(deviceList[1].index) + ">-" + "16KB";
+  EXPECT_EQ(output, expected);
 }
 
 TEST(ProgrammerHelperTest, RemoveInfoAndNewlineTest) {
@@ -858,94 +445,4 @@ TEST(ProgrammerHelperTest, RemoveInfoAndNewlineTest) {
   EXPECT_EQ(removeInfoAndNewline("Info : \n"), " ");
   EXPECT_EQ(removeInfoAndNewline("Hello, world!\n"), "Hello, world!");
   EXPECT_EQ(removeInfoAndNewline(""), "");
-}
-
-class HwDevicesTestFixture : public ::testing::Test {
-protected:
-  void SetUp() override {
-    // cable = Cable{0x403, 0x6011, 1, 2, 33, 1, "serial_number_xyz", "description_xyz", 10000, TransportType::JTAG, "RsFtdi_1_2", 1};
-    // hwDevices = HwDevices(cable);
-  }
-  void TearDown() override {
-    // Clean up any temporary files after each test
-  }
-  Cable cable;
-  HwDevices hwDevices;
-};
-
-// TEST_F(HwDevicesTestFixture, ConstructorTest) {
-//   Cable output = hwDevices.getCable();
-//   // EXPECT_EQ(output.vendorId, cable.vendorId);
-//   // EXPECT_EQ(output.productId, cable.productId);
-//   // EXPECT_EQ(output.busAddr, cable.busAddr);
-//   // EXPECT_EQ(output.portAddr, cable.portAddr);
-//   // EXPECT_EQ(output.deviceAddr, cable.deviceAddr);
-//   // EXPECT_EQ(output.serialNumber, cable.serialNumber);
-//   // EXPECT_EQ(output.description, cable.description);
-//   // EXPECT_EQ(output.speed, cable.speed);
-//   // EXPECT_EQ(output.transport, cable.transport);
-//   // EXPECT_EQ(output.name, cable.name);
-//   EXPECT_EQ(output.index, cable.index);
-// }
-
-TEST_F(HwDevicesTestFixture, AddDevicesTest) {
-  // EXPECT_EQ(hwDevices.getDevicesCount(), 0);
-  // hwDevices.addDevices({
-  //   {1,"Gemini1",16384,{1, "Tap1.Gemini1", true, 0x1234AABB, 0x1234AABB, 5, 0x1, 0x3}},
-  //   {2,"Gemini2",16384,{2, "Tap2.Gemini2", true, 0x1234AABB, 0x1234AABB, 5, 0x1, 0x3}}
-  // });
-  // std::vector<Device> devices = {
-  //   {1,"Gemini1",16384,{1, "Tap1.Gemini1", true, 0x1234AABB, 0x1234AABB, 5, 0x1, 0x3}},
-  //   {2,"Gemini2",16384,{2, "Tap2.Gemini2", true, 0x1234AABB, 0x1234AABB, 5, 0x1, 0x3}}
-  // };
-  // EXPECT_EQ(hwDevices.getDevices().size(), devices.size());
-  // for(size_t i = 0; i < hwDevices.getDevicesCount(); i++) {
-  //   EXPECT_EQ(hwDevices.getDevices()[i].name, devices[i].name);
-  //   EXPECT_EQ(hwDevices.getDevices()[i].index, devices[i].index);
-  //   EXPECT_EQ(hwDevices.getDevices()[i].flashSize, devices[i].flashSize);
-  // }
-}
-
-TEST_F(HwDevicesTestFixture, AddDeviceTest124) {
-  // EXPECT_EQ(hwDevices.getDevicesCount(), 0);
-  // Device device{1,"Gemini1",16384,{1, "Tap1.Gemini1", true, 0x1234AABB, 0x1234AABB, 5, 0x1, 0x3}};
-  // hwDevices.addDevice(device);
-  // EXPECT_EQ(hwDevices.getDevicesCount(), 1);
-}
-
-TEST_F(HwDevicesTestFixture, ClearDevicesTest) {
-  // EXPECT_EQ(hwDevices.getDevicesCount(), 0);
-  // hwDevices.addDevices({
-  //   {1,"Gemini1",16384,{1, "Tap1.Gemini1", true, 0x1234AABB, 0x1234AABB, 5, 0x1, 0x3}},
-  //   {2,"Gemini2",16384,{2, "Tap2.Gemini2", true, 0x1234AABB, 0x1234AABB, 5, 0x1, 0x3}}
-  // });
-  // EXPECT_EQ(hwDevices.getDevicesCount(), 2);
-  // hwDevices.clearDevices();
-  // EXPECT_EQ(hwDevices.getDevicesCount(), 0);
-}
-
-TEST_F(HwDevicesTestFixture, FindDeviceByIndexTest) {
-  // hwDevices.addDevices({
-  //   {1,"Gemini1",16384,{1, "Tap1.Gemini1", true, 0x1234AABB, 0x1234AABB, 5, 0x1, 0x3}},
-  //   {2,"Gemini2",32768,{2, "Tap2.Gemini2", true, 0x1234AABB, 0x1234AABB, 5, 0x1, 0x3}}
-  // });
-  // Device device;
-  // bool found = hwDevices.findDevice(1, device);
-  // EXPECT_TRUE(found);
-  // EXPECT_EQ(device.name, hwDevices.getDevices()[0].name);
-  // EXPECT_EQ(device.index, hwDevices.getDevices()[0].index);
-  // EXPECT_EQ(device.flashSize, hwDevices.getDevices()[0].flashSize);
-}
-
-TEST_F(HwDevicesTestFixture, FindDeviceByNameTest) {
-  // hwDevices.addDevices({
-  //   {1,"Gemini1",16384,{1, "Tap1.Gemini1", true, 0x1234AABB, 0x1234AABB, 5, 0x1, 0x3}},
-  //   {2,"Gemini2",32768,{2, "Tap2.Gemini2", true, 0x1234AABB, 0x1234AABB, 5, 0x1, 0x3}}
-  // });
-  // Device device;
-  // bool found = hwDevices.findDevice("Gemini2", device);
-  // EXPECT_TRUE(found);
-  // EXPECT_EQ(device.name, hwDevices.getDevices()[1].name);
-  // EXPECT_EQ(device.index, hwDevices.getDevices()[1].index);
-  // EXPECT_EQ(device.flashSize, hwDevices.getDevices()[1].flashSize);
 }
