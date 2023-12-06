@@ -31,7 +31,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "CFGCommon/CFGCommon.h"
 #include "Configuration/HardwareManager/HardwareManager.h"
 #include "Configuration/HardwareManager/OpenocdAdapter.h"
-#include "ProgrammerTool.h"
 #include "ProgrammerGuiInterface.h"
 #include "ProgrammerTool.h"
 #include "Programmer_errror_code.h"
@@ -44,7 +43,7 @@ namespace FOEDAG {
 static std::string libOpenOcdExecPath;
 // static std::vector<TapInfo> foundTap;
 static std::map<std::string, Cable> cableMap;
-//static bool isCableMapInitialized = false;
+// static bool isCableMapInitialized = false;
 static bool isHwDbInitialized = false;
 static std::vector<HwDevices> cableDeviceDb;
 
@@ -64,27 +63,29 @@ static std::vector<HwDevices> cableDeviceDb;
 //     {InvalidFlashSize, "Invalid flash size"},
 //     {UnsupportedFunc, "Unsupported function"}};
 double ExtractNumber(const std::string& line) {
-
   try {
     // Convert string to double
     return std::stod(line);
   } catch (const std::invalid_argument&) {
   }
-  return 0.0; // Return 0 or an appropriate default value if extraction fails
+  return 0.0;  // Return 0 or an appropriate default value if extraction fails
 }
 
 std::string UpdateDownloadProgress(double percentage) {
-  const int barWidth = 50; // Width of the progress bar
+  const int barWidth = 50;  // Width of the progress bar
   std::ostringstream progressStr;
 
   progressStr << "Downloading: [";
 
   int pos = static_cast<int>(barWidth * (percentage / 100.0));
-  
+
   for (int i = 0; i < barWidth; ++i) {
-      if (i < pos) progressStr << "=";
-      else if (i == pos) progressStr << ">";
-      else progressStr << " ";
+    if (i < pos)
+      progressStr << "=";
+    else if (i == pos)
+      progressStr << ">";
+    else
+      progressStr << " ";
   }
 
   progressStr << std::fixed << std::setprecision(2);
@@ -92,7 +93,7 @@ std::string UpdateDownloadProgress(double percentage) {
   // CFG_post_msg(CFG_print("Progress....%6.2f%%", percentage),
   //                   "INFO: ", false);
   std::string debugString = progressStr.str() + "\r";
-  CFG_post_msg(debugString.c_str(), "" , false);
+  CFG_post_msg(debugString.c_str(), "", false);
   std::cout << debugString;
   std::cout.flush();
   return progressStr.str();
@@ -306,17 +307,18 @@ void programmer_entry(CFGCommon_ARG* cmdarg) {
         cmdarg->tclStatus = TCL_ERROR;
         return;
       }
-      
-      if (!hardware_manager.find_device(cable_name, device_index, device, taplist,
-                                     true)) {
+
+      if (!hardware_manager.find_device(cable_name, device_index, device,
+                                        taplist, true)) {
         CFG_POST_ERR("Device %d not found", device_index);
         cmdarg->tclStatus = TCL_ERROR;
         return;
       }
-      int returnCode = programmer.query_fpga_status(device, cfgStatus, statusPrintOut);
+      int returnCode =
+          programmer.query_fpga_status(device, cfgStatus, statusPrintOut);
       if (returnCode != 0) {
         CFG_POST_ERR("Failed to get available devices status. Error code: %d",
-                       returnCode);
+                     returnCode);
       } else {
         if (fpga_status_arg->verbose) {
           CFG_POST_MSG("\n%s", statusPrintOut.c_str());
@@ -359,26 +361,26 @@ void programmer_entry(CFGCommon_ARG* cmdarg) {
         return;
       }
       */
-      
+
     } else if (subCmd == "fpga_config") {
       auto fpga_config_arg =
           static_cast<const CFGArg_PROGRAMMER_FPGA_CONFIG*>(arg->get_sub_arg());
       std::string bitstreamFile = fpga_config_arg->m_args[0];
       std::string cableInput = fpga_config_arg->cable;
       uint64_t deviceIndex = fpga_config_arg->index;
-      
+
       Device device{};
       std::vector<Tap> taplist{};
-      //CfgStatus cfgStatus;
+      // CfgStatus cfgStatus;
       std::string statusPrintOut;
       if (!hardware_manager.is_cable_exists(cableInput, true)) {
         CFG_POST_ERR("Cable '%s' not found", cableInput.c_str());
         cmdarg->tclStatus = TCL_ERROR;
         return;
       }
-      
-      if (!hardware_manager.find_device(cableInput, deviceIndex, device, taplist,
-                                     true)) {
+
+      if (!hardware_manager.find_device(cableInput, deviceIndex, device,
+                                        taplist, true)) {
         CFG_POST_ERR("Device %d not found", deviceIndex);
         cmdarg->tclStatus = TCL_ERROR;
         return;
@@ -394,33 +396,31 @@ void programmer_entry(CFGCommon_ARG* cmdarg) {
         };
         gui->ProgramFpga(device.cable, device, bitstreamFile);
       }
-      
+
       status = programmer.program_fpga(
-          /*device.cable,*/ 
-          device, 
-          bitstreamFile, 
-          gui ? gui->Stop() : stop, 
+          /*device.cable,*/
+          device, bitstreamFile, gui ? gui->Stop() : stop,
           nullptr, /*out stream*/
           [](std::string msg) {
-            //std::string formatted;
-            //formatted = removeInfoAndNewline(msg);
-            //CFG_POST_MSG("%s", formatted.c_str());
+            // std::string formatted;
+            // formatted = removeInfoAndNewline(msg);
+            // CFG_POST_MSG("%s", formatted.c_str());
             double percentage = ExtractNumber(msg);
             UpdateDownloadProgress(percentage);
-            //CFG_POST_MSG("%s", msg.c_str());
+            // CFG_POST_MSG("%s", msg.c_str());
           },
           progress);
       if (Gui::GuiInterface()) {
         Gui::GuiInterface()->Status(device.cable, device, status);
       }
-      
+
       if (status != ProgrammerErrorCode::NoError) {
         CFG_POST_ERR("Failed to program FPGA. Error code: %d", status);
         cmdarg->tclStatus = TCL_ERROR;
         return;
       }
-      
-      /* old code 
+
+      /* old code
       if (!isHwDbInitialized) {
         InitializeHwDb(cableDeviceDb, cableMap, false);
         isHwDbInitialized = true;
@@ -463,7 +463,7 @@ void programmer_entry(CFGCommon_ARG* cmdarg) {
         return;
       }
       */
-      
+
     } else if (subCmd == "otp") {
       auto otp_arg =
           static_cast<const CFGArg_PROGRAMMER_OTP*>(arg->get_sub_arg());
@@ -614,8 +614,8 @@ int ListDevices(const Cable& cable, std::vector<Device>& devices) {
   return ProgrammerErrorCode::NoError;
 }
 
-int GetFpgaStatus(const Cable& cable, const Device& device, CfgStatus& cfgStatus,
-                  std::string& statusOutputPrint) {
+int GetFpgaStatus(const Cable& cable, const Device& device,
+                  CfgStatus& cfgStatus, std::string& statusOutputPrint) {
   OpenocdAdapter openOcd{libOpenOcdExecPath};
   HardwareManager hardware_manager{&openOcd};
   ProgrammerTool programmer{&openOcd};
@@ -663,8 +663,8 @@ int ProgramFpga(const Cable& cable, const Device& device,
     return ProgrammerErrorCode::DeviceNotFound;
   }
 
-  return programmer.program_fpga(device, bitfile, stop, outStream,
-                                       callbackMsg, callbackProgress);
+  return programmer.program_fpga(device, bitfile, stop, outStream, callbackMsg,
+                                 callbackProgress);
 }
 
 int ProgramOTP(const Cable& cable, const Device& device,
@@ -691,8 +691,8 @@ int ProgramOTP(const Cable& cable, const Device& device,
     return ProgrammerErrorCode::DeviceNotFound;
   }
 
-  return programmer.program_otp(device, bitfile, stop, outStream,
-                                       callbackMsg, callbackProgress);
+  return programmer.program_otp(device, bitfile, stop, outStream, callbackMsg,
+                                callbackProgress);
   // if (libOpenOcdExecPath.empty()) {
   //   return ProgrammerErrorCode::OpenOCDExecutableNotFound;
   // }

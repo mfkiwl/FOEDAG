@@ -110,8 +110,7 @@ CommandOutputType OpenocdAdapter::check_output(
   return NOT_OUTPUT;
 }
 
-void OpenocdAdapter::update_taplist(const std::vector<Tap>& taplist)
-{
+void OpenocdAdapter::update_taplist(const std::vector<Tap>& taplist) {
   m_taplist = taplist;
 }
 
@@ -145,11 +144,12 @@ int OpenocdAdapter::program_fpga(const Device& device,
   ss << " -c \"" << cmd << "\"";
   ss << " -c \"exit\"";
 
-  std::string openocd_command = "OPENOCD_DEBUG_LEVEL=-3 " + m_openocd + ss.str();
+  std::string openocd_command =
+      "OPENOCD_DEBUG_LEVEL=-3 " + m_openocd + ss.str();
   // run the command
   int res = CFG_execute_cmd_with_callback(
-      openocd_command, m_last_output, outStream,
-      std::regex{}, stop, nullptr, [&](const std::string& line) {
+      openocd_command, m_last_output, outStream, std::regex{}, stop, nullptr,
+      [&](const std::string& line) {
         std::vector<std::string> data{};
         switch (check_output(line, data)) {
           case CMD_PROGRESS: {
@@ -162,7 +162,7 @@ int OpenocdAdapter::program_fpga(const Device& device,
                 callbackMsg("99.99");
               }
             }
-             if (callbackProgress != nullptr) {
+            if (callbackProgress != nullptr) {
               if (percent < 100) {
                 callbackProgress(data[0]);
               } else {
@@ -184,8 +184,8 @@ int OpenocdAdapter::program_fpga(const Device& device,
             cfg_err = 1;
             break;
           case CONFIG_SUCCESS:
-            if(callbackMsg != nullptr) callbackMsg("100.00");
-            if(callbackProgress != nullptr) callbackProgress("100.00");
+            if (callbackMsg != nullptr) callbackMsg("100.00");
+            if (callbackProgress != nullptr) callbackProgress("100.00");
             cfg_success = 1;
             break;
           case UNKNOWN_FIRMWARE:
@@ -195,7 +195,7 @@ int OpenocdAdapter::program_fpga(const Device& device,
             fsbl_boot_failure = 1;
             break;
           default:
-            //callbackMsg(line);
+            // callbackMsg(line);
             break;
         }
       });
@@ -222,7 +222,6 @@ int OpenocdAdapter::program_flash(
     const Device& device, const std::string& bitfile, std::atomic<bool>& stop,
     ProgramFlashOperation modes, std::ostream* outStream,
     OutputMessageCallback callbackMsg, ProgressCallback callbackProgress) {
-      
   std::ostringstream ss;
   int cmd_err = 0;
   int cmd_timeout = 0;
@@ -247,11 +246,12 @@ int OpenocdAdapter::program_flash(
   ss << " -c \"" << cmd << "\"";
   ss << " -c \"exit\"";
 
-  std::string openocd_command = "OPENOCD_DEBUG_LEVEL=-3 " + m_openocd + ss.str();
+  std::string openocd_command =
+      "OPENOCD_DEBUG_LEVEL=-3 " + m_openocd + ss.str();
   // run the command
   int res = CFG_execute_cmd_with_callback(
-      openocd_command, m_last_output, outStream,
-      std::regex{}, stop, nullptr, [&](const std::string& line) {
+      openocd_command, m_last_output, outStream, std::regex{}, stop, nullptr,
+      [&](const std::string& line) {
         std::vector<std::string> data{};
         switch (check_output(line, data)) {
           case CMD_PROGRESS: {
@@ -264,7 +264,7 @@ int OpenocdAdapter::program_flash(
                 callbackMsg("99.99");
               }
             }
-             if (callbackProgress != nullptr) {
+            if (callbackProgress != nullptr) {
               if (percent < 100) {
                 callbackProgress(data[0]);
               } else {
@@ -286,8 +286,8 @@ int OpenocdAdapter::program_flash(
             cfg_err = 1;
             break;
           case CONFIG_SUCCESS:
-            if(callbackMsg != nullptr) callbackMsg("100.00");
-            if(callbackProgress != nullptr) callbackProgress("100.00");
+            if (callbackMsg != nullptr) callbackMsg("100.00");
+            if (callbackProgress != nullptr) callbackProgress("100.00");
             cfg_success = 1;
             break;
           case UNKNOWN_FIRMWARE:
@@ -297,7 +297,7 @@ int OpenocdAdapter::program_flash(
             fsbl_boot_failure = 1;
             break;
           default:
-            //callbackMsg(line);
+            // callbackMsg(line);
             break;
         }
       });
@@ -350,11 +350,12 @@ int OpenocdAdapter::program_otp(const Device& device,
   ss << " -c \"" << cmd << "\"";
   ss << " -c \"exit\"";
 
-  std::string openocd_command = "OPENOCD_DEBUG_LEVEL=-3 " + m_openocd + ss.str();
+  std::string openocd_command =
+      "OPENOCD_DEBUG_LEVEL=-3 " + m_openocd + ss.str();
   // run the openocd_command
   int res = CFG_execute_cmd_with_callback(
-      openocd_command, m_last_output, outStream,
-      std::regex{}, stop, nullptr, [&](const std::string& line) {
+      openocd_command, m_last_output, outStream, std::regex{}, stop, nullptr,
+      [&](const std::string& line) {
         std::vector<std::string> data{};
         switch (check_output(line, data)) {
           case CMD_PROGRESS: {
@@ -367,7 +368,7 @@ int OpenocdAdapter::program_otp(const Device& device,
                 callbackMsg("99.99");
               }
             }
-             if (callbackProgress != nullptr) {
+            if (callbackProgress != nullptr) {
               if (percent < 100) {
                 callbackProgress(data[0]);
               } else {
@@ -389,8 +390,8 @@ int OpenocdAdapter::program_otp(const Device& device,
             cfg_err = 1;
             break;
           case CONFIG_SUCCESS:
-            if(callbackMsg != nullptr) callbackMsg("100.00");
-            if(callbackProgress != nullptr) callbackProgress("100.00");
+            if (callbackMsg != nullptr) callbackMsg("100.00");
+            if (callbackProgress != nullptr) callbackProgress("100.00");
             cfg_success = 1;
             break;
           case UNKNOWN_FIRMWARE:
@@ -400,7 +401,7 @@ int OpenocdAdapter::program_otp(const Device& device,
             fsbl_boot_failure = 1;
             break;
           default:
-            //callbackMsg(line);
+            // callbackMsg(line);
             break;
         }
       });
