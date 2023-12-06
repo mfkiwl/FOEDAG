@@ -49,7 +49,6 @@ class Gui {
   static ProgrammerGuiInterface* GuiInterface();
 };
 
-void addOrUpdateErrorMessage(int error, const std::string& message);
 std::vector<std::string> findStringPattern(const std::string& input,
                                            const std::string& pattern);
 std::vector<std::string> parseOperationString(const std::string& operation);
@@ -68,20 +67,6 @@ std::string buildCableDevicesAliasNameWithSpaceSeparatedString(
 
 std::string removeInfoAndNewline(const std::string& input);
 
-void InitializeCableMap(std::vector<Cable>& cables,
-                        std::map<std::string, Cable>& cableMapObj);
-
-bool findDeviceFromDb(const std::vector<HwDevices>& cableDeviceDb,
-                      const Cable& cable, std::string deviceName,
-                      Device& device);
-
-bool findDeviceFromDb(const std::vector<HwDevices>& cableDeviceDb,
-                      const Cable& cable, int deviceIndex, Device& device);
-
-// libusb related helper function
-std::vector<Tap> extractTapInfoList(const std::string& tapInfoString);
-int extractDeviceList(const std::string& deviceListString,
-                      std::vector<Device>& devices);
 CfgStatus extractStatus(const std::string& statusString, bool& statusFound);
 
 }  // namespace FOEDAG
