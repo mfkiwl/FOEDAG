@@ -38,7 +38,7 @@ inline bool operator==(const Cable &c1, const Cable &c2) {
 
 inline bool operator==(const Tap &t1, const Tap &t2) {
   return t1.idcode == t2.idcode && t1.index == t2.index &&
-         t1.irmask == t2.irmask && t1.irlength == t2.irlength;
+         t1.irlength == t2.irlength;
 }
 
 inline bool operator==(const Device &d1, const Device &d2) {
@@ -74,7 +74,6 @@ class ProgrammerDevice {
   QString name() const { return m_name; }
 
   uint32_t idCode() const { return m_device.tap.idcode; }
-  uint32_t irMask() const { return m_device.tap.irmask; }
   uint32_t irLen() const { return m_device.tap.irlength; }
 
  private:

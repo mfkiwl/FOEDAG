@@ -41,11 +41,7 @@ namespace FOEDAG {
 
 // openOCDPath used by library
 static std::string libOpenOcdExecPath;
-// static std::vector<TapInfo> foundTap;
-// static std::vector<TapInfo> foundTap;
 static std::map<std::string, Cable> cableMap;
-// static bool isCableMapInitialized = false;
-static bool isHwDbInitialized = false;
 static std::vector<HwDevices> cableDeviceDb;
 
 double ExtractNumber(const std::string& line) {
