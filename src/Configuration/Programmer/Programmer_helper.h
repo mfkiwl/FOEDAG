@@ -49,6 +49,8 @@ class Gui {
   static ProgrammerGuiInterface* GuiInterface();
 };
 
+double ExtractNumber(const std::string& line);
+std::string UpdateDownloadProgress(double percentage);
 std::vector<std::string> findStringPattern(const std::string& input,
                                            const std::string& pattern);
 std::vector<std::string> parseOperationString(const std::string& operation);

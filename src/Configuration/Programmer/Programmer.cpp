@@ -41,45 +41,21 @@ namespace FOEDAG {
 
 // openOCDPath used by library
 static std::string libOpenOcdExecPath;
-static std::map<std::string, Cable> cableMap;
-static std::vector<HwDevices> cableDeviceDb;
 
-double ExtractNumber(const std::string& line) {
-  try {
-    // Convert string to double
-    return std::stod(line);
-  } catch (const std::invalid_argument&) {
-  }
-  return 0.0;  // Return 0 or an appropriate default value if extraction fails
-}
-
-std::string UpdateDownloadProgress(double percentage) {
-  const int barWidth = 50;  // Width of the progress bar
-  std::ostringstream progressStr;
-
-  progressStr << "Downloading: [";
-
-  int pos = static_cast<int>(barWidth * (percentage / 100.0));
-
-  for (int i = 0; i < barWidth; ++i) {
-    if (i < pos)
-      progressStr << "=";
-    else if (i == pos)
-      progressStr << ">";
-    else
-      progressStr << " ";
-  }
-
-  progressStr << std::fixed << std::setprecision(2);
-  progressStr << "] " << percentage << " %";
-  // CFG_post_msg(CFG_print("Progress....%6.2f%%", percentage),
-  //                   "INFO: ", false);
-  std::string debugString = progressStr.str() + "\n";
-  CFG_post_msg(debugString.c_str(), "", false);
-  // std::cout << debugString;
-  // std::cout.flush();
-  return progressStr.str();
-}
+std::map<int, std::string> ErrorMessages = {
+    {NoError, "Success"},
+    {GeneralCmdError, "Command executation error"},
+    {UnknownFirmware, "Unknown firmware"},
+    {BufferTimeout, "Buffer time out"},
+    {CmdTimeout, "Command time out"},
+    {ConfigError, "Configuration error"},
+    {FsblBootFail, "FSBL boot failed"},
+    {CableNotFound, "Cable not found"},
+    {CableNotSupported, "Cable not supported"},
+    {DeviceNotFound, "FPGA Device not found"},
+    {BitfileNotFound, "Bitstream file not found"},
+    {OpenOCDExecutableNotFound, "Openocd executable not found"},
+    {InvalidFlashSize, "Invalid flash size"}};
 
 void programmer_entry(CFGCommon_ARG* cmdarg) {
   auto arg = std::static_pointer_cast<CFGArg_PROGRAMMER>(cmdarg->arg);
@@ -91,7 +67,6 @@ void programmer_entry(CFGCommon_ARG* cmdarg) {
   // setup hardware manager and its depencencies
   OpenocdAdapter openOcd{cmdarg->toolPath.string()};
   HardwareManager hardware_manager{&openOcd};
-  ProgrammerTool programmer{&openOcd};
 
   std::string subCmd = arg->get_sub_arg_name();
   if (cmdarg->compilerName == "dummy") {
@@ -296,11 +271,14 @@ void programmer_entry(CFGCommon_ARG* cmdarg) {
         cmdarg->tclStatus = TCL_ERROR;
         return;
       }
+
+      ProgrammerTool programmer{&openOcd};
       int returnCode =
           programmer.query_fpga_status(device, cfgStatus, statusPrintOut);
       if (returnCode != 0) {
-        CFG_POST_ERR("Failed to get available devices status. Error code: %d",
-                     returnCode);
+        CFG_POST_ERR(
+            "Failed to get available devices status. Error code: %d. %s",
+            returnCode, GetErrorMessage(returnCode).c_str());
       } else {
         if (fpga_status_arg->verbose) {
           CFG_POST_MSG("\n%s", statusPrintOut.c_str());
@@ -347,12 +325,10 @@ void programmer_entry(CFGCommon_ARG* cmdarg) {
           device, bitstreamFile, gui ? gui->Stop() : stop,
           nullptr, /*out stream*/
           [](std::string msg) {
-            // std::string formatted;
-            // formatted = removeInfoAndNewline(msg);
-            // CFG_POST_MSG("%s", formatted.c_str());
+            CFG_post_msg(CFG_print("Progress....%6.2f%%", msg),
+                         "INFO: ", false);
             double percentage = ExtractNumber(msg);
             UpdateDownloadProgress(percentage);
-            // CFG_POST_MSG("%s", msg.c_str());
           },
           progress);
       if (Gui::GuiInterface()) {
@@ -360,7 +336,9 @@ void programmer_entry(CFGCommon_ARG* cmdarg) {
       }
 
       if (status != ProgrammerErrorCode::NoError) {
-        CFG_POST_ERR("Failed to program %s FPGA. Error code: %d", bitstreamFile.c_str(), status);
+        CFG_POST_ERR("Failed to program %s FPGA. Error code: %d. %s",
+                     bitstreamFile.c_str(), status,
+                     GetErrorMessage(status).c_str());
         cmdarg->tclStatus = TCL_ERROR;
         return;
       } else {
@@ -411,12 +389,10 @@ void programmer_entry(CFGCommon_ARG* cmdarg) {
           device, bitstreamFile, gui ? gui->Stop() : stop,
           nullptr, /*out stream*/
           [](std::string msg) {
-            // std::string formatted;
-            // formatted = removeInfoAndNewline(msg);
-            // CFG_POST_MSG("%s", formatted.c_str());
-            double percentage = ExtractNumber(msg);
-            UpdateDownloadProgress(percentage);
-            // CFG_POST_MSG("%s", msg.c_str());
+            CFG_post_msg(CFG_print("Progress....%6.2f%%", msg),
+                         "INFO: ", false);
+            // double percentage = ExtractNumber(msg);
+            // UpdateDownloadProgress(percentage);
           },
           progress);
       if (Gui::GuiInterface()) {
@@ -424,11 +400,14 @@ void programmer_entry(CFGCommon_ARG* cmdarg) {
       }
 
       if (status != ProgrammerErrorCode::NoError) {
-        CFG_POST_ERR("Failed to program device OTP %s. Error code: %d", bitstreamFile.c_str(), status);
+        CFG_POST_ERR("Failed to program device OTP %s. Error code: %d. %s",
+                     bitstreamFile.c_str(), status,
+                     GetErrorMessage(status).c_str());
         cmdarg->tclStatus = TCL_ERROR;
         return;
       } else {
-        CFG_POST_MSG("Programmed OTP '%s' successfully.", bitstreamFile.c_str());
+        CFG_POST_MSG("Programmed OTP '%s' successfully.",
+                     bitstreamFile.c_str());
       }
     } else if (subCmd == "flash") {
       auto flash_arg =
@@ -468,12 +447,10 @@ void programmer_entry(CFGCommon_ARG* cmdarg) {
           device, bitstreamFile, gui ? gui->Stop() : stop,
           ProgramFlashOperation::Program, nullptr, /*out stream*/
           [](std::string msg) {
-            // std::string formatted;
-            // formatted = removeInfoAndNewline(msg);
-            // CFG_POST_MSG("%s", formatted.c_str());
-            double percentage = ExtractNumber(msg);
-            UpdateDownloadProgress(percentage);
-            // CFG_POST_MSG("%s", msg.c_str());
+            CFG_post_msg(CFG_print("Progress....%6.2f%%", msg),
+                         "INFO: ", false);
+            // double percentage = ExtractNumber(msg);
+            // UpdateDownloadProgress(percentage);
           },
           progress);
       if (Gui::GuiInterface()) {
@@ -481,11 +458,14 @@ void programmer_entry(CFGCommon_ARG* cmdarg) {
       }
 
       if (status != ProgrammerErrorCode::NoError) {
-        CFG_POST_ERR("Failed Flash programming %s FPGA. Error code: %d", bitstreamFile.c_str(), status);
+        CFG_POST_ERR("Failed Flash programming %s FPGA. Error code: %d. %s",
+                     bitstreamFile.c_str(), status,
+                     GetErrorMessage(status).c_str());
         cmdarg->tclStatus = TCL_ERROR;
         return;
       } else {
-        CFG_POST_MSG("Flash programming '%s' successfully.", bitstreamFile.c_str());
+        CFG_POST_MSG("Flash programming '%s' successfully.",
+                     bitstreamFile.c_str());
       }
     }
   }
@@ -506,11 +486,11 @@ int InitLibrary(std::string openOCDPath) {
 }
 
 std::string GetErrorMessage(int errorCode) {
-  // auto it = ErrorMessages.find(errorCode);
-  // if (it != ErrorMessages.end()) {
-  //   return it->second;
-  // }
-  return "Unknown error.";
+  auto it = ErrorMessages.find(errorCode);
+  if (it != ErrorMessages.end()) {
+    return it->second;
+  }
+  return "Unknown error code";
 }
 
 int GetAvailableCables(std::vector<Cable>& cables) {
