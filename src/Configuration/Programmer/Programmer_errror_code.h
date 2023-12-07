@@ -13,7 +13,8 @@ enum ProgrammerErrorCode {
   CableNotSupported = -8,
   DeviceNotFound = -9,
   BitfileNotFound = -10,
-  OpenOCDExecutableNotFound = -11
+  OpenOCDExecutableNotFound = -11,
+  InvalidFlashSize = -12,
 };
 
 }
