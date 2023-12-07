@@ -27,8 +27,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "Configuration/CFGCommon/CFGCommon.h"
 #include "Configuration/HardwareManager/HardwareManager.h"
-#include "Configuration/Programmer/Programmer_helper.h"
 #include "Configuration/Programmer/Programmer_errror_code.h"
+#include "Configuration/Programmer/Programmer_helper.h"
 namespace FOEDAG {
 
 OpenocdAdapter::OpenocdAdapter(std::string openocd) : m_openocd(openocd) {}
@@ -195,7 +195,7 @@ int OpenocdAdapter::program_fpga(const Device& device,
       });
 
   if (res != 0) {
-    statusCode =  ProgrammerErrorCode::GeneralCmdError;
+    statusCode = ProgrammerErrorCode::GeneralCmdError;
   }
   return statusCode;
 }
@@ -204,13 +204,7 @@ int OpenocdAdapter::program_flash(
     ProgramFlashOperation modes, std::ostream* outStream,
     OutputMessageCallback callbackMsg, ProgressCallback callbackProgress) {
   std::ostringstream ss;
-  int cmd_err = 0;
-  int cmd_timeout = 0;
-  int cbuffer_timeout = 0;
-  int unknown_fw = 0;
-  int cfg_success = 0;
-  int cfg_err = 0;
-  int fsbl_boot_failure = 0;
+  int statusCode = ProgrammerErrorCode::NoError;
 
   CFG_ASSERT(std::filesystem::exists(m_openocd));
 
@@ -255,27 +249,26 @@ int OpenocdAdapter::program_flash(
             break;
           }
           case CMD_ERROR:
-            cmd_err = std::stoi(data[0]);
+            statusCode = std::stoi(data[0]);
             break;
           case CMD_TIMEOUT:
-            cmd_timeout = 1;
+            statusCode = ProgrammerErrorCode::CmdTimeout;
             break;
           case CBUFFER_TIMEOUT:
-            cbuffer_timeout = 1;
+            statusCode = ProgrammerErrorCode::BufferTimeout;
             break;
           case CONFIG_ERROR:
-            cfg_err = 1;
+            statusCode = ProgrammerErrorCode::ConfigError;
             break;
           case CONFIG_SUCCESS:
             if (callbackMsg != nullptr) callbackMsg("100.00");
             if (callbackProgress != nullptr) callbackProgress("100.00");
-            cfg_success = 1;
             break;
           case UNKNOWN_FIRMWARE:
-            unknown_fw = 1;
+            statusCode = ProgrammerErrorCode::UnknownFirmware;
             break;
           case FSBL_BOOT_FAILURE:
-            fsbl_boot_failure = 1;
+            statusCode = ProgrammerErrorCode::FsblBootFail;
             break;
           default:
             // callbackMsg(line);
@@ -283,23 +276,10 @@ int OpenocdAdapter::program_flash(
         }
       });
 
-  if (fsbl_boot_failure) return -6;
-
-  if (cfg_err) return -5;
-
-  if (cmd_timeout) return -4;
-
-  if (cbuffer_timeout) return -3;
-
-  if (unknown_fw) return -2;
-
-  if (cmd_err) return cmd_err;
-
   if (res != 0) {
-    return -1;  // general cmdline error
+    statusCode = ProgrammerErrorCode::GeneralCmdError;
   }
-
-  return 0;  // no error
+  return statusCode;
 }
 int OpenocdAdapter::program_otp(const Device& device,
                                 const std::string& bitfile,
@@ -308,13 +288,7 @@ int OpenocdAdapter::program_otp(const Device& device,
                                 OutputMessageCallback callbackMsg,
                                 ProgressCallback callbackProgress) {
   std::ostringstream ss;
-  int cmd_err = 0;
-  int cmd_timeout = 0;
-  int cbuffer_timeout = 0;
-  int unknown_fw = 0;
-  int cfg_success = 0;
-  int cfg_err = 0;
-  int fsbl_boot_failure = 0;
+  int statusCode = ProgrammerErrorCode::NoError;
 
   CFG_ASSERT(std::filesystem::exists(m_openocd));
 
@@ -359,27 +333,26 @@ int OpenocdAdapter::program_otp(const Device& device,
             break;
           }
           case CMD_ERROR:
-            cmd_err = std::stoi(data[0]);
+            statusCode = std::stoi(data[0]);
             break;
           case CMD_TIMEOUT:
-            cmd_timeout = 1;
+            statusCode = ProgrammerErrorCode::CmdTimeout;
             break;
           case CBUFFER_TIMEOUT:
-            cbuffer_timeout = 1;
+            statusCode = ProgrammerErrorCode::BufferTimeout;
             break;
           case CONFIG_ERROR:
-            cfg_err = 1;
+            statusCode = ProgrammerErrorCode::ConfigError;
             break;
           case CONFIG_SUCCESS:
             if (callbackMsg != nullptr) callbackMsg("100.00");
             if (callbackProgress != nullptr) callbackProgress("100.00");
-            cfg_success = 1;
             break;
           case UNKNOWN_FIRMWARE:
-            unknown_fw = 1;
+            statusCode = ProgrammerErrorCode::UnknownFirmware;
             break;
           case FSBL_BOOT_FAILURE:
-            fsbl_boot_failure = 1;
+            statusCode = ProgrammerErrorCode::FsblBootFail;
             break;
           default:
             // callbackMsg(line);
@@ -387,23 +360,10 @@ int OpenocdAdapter::program_otp(const Device& device,
         }
       });
 
-  if (fsbl_boot_failure) return -6;
-
-  if (cfg_err) return -5;
-
-  if (cmd_timeout) return -4;
-
-  if (cbuffer_timeout) return -3;
-
-  if (unknown_fw) return -2;
-
-  if (cmd_err) return cmd_err;
-
   if (res != 0) {
-    return -1;  // general cmdline error
+    statusCode = ProgrammerErrorCode::GeneralCmdError;
   }
-
-  return 0;  // no error
+  return statusCode;
 }
 
 int OpenocdAdapter::query_fpga_status(const Device& device,
