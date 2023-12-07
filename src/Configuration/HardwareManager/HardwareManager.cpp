@@ -258,4 +258,8 @@ std::vector<Device> HardwareManager::get_devices(const Cable& cable) {
   return devices;
 }
 
+static const std::vector<HardwareManager_DEVICE_INFO> &get_device_db() {
+  return m_device_db;
+}
+
 }  // namespace FOEDAG

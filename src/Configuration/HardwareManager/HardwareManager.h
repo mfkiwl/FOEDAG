@@ -65,6 +65,7 @@ class HardwareManager {
   bool find_device(std::string cable_name, uint32_t device_index,
                    Device &device, std::vector<Tap> &taplist,
                    bool numeric_name_as_index = false);
+  static const std::vector<HardwareManager_DEVICE_INFO> &get_device_db();
 
  private:
   static const std::vector<HardwareManager_CABLE_INFO> m_cable_db;
