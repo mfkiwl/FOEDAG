@@ -74,10 +74,10 @@ std::string UpdateDownloadProgress(double percentage) {
   progressStr << "] " << percentage << " %";
   // CFG_post_msg(CFG_print("Progress....%6.2f%%", percentage),
   //                   "INFO: ", false);
-  std::string debugString = progressStr.str() + "\r";
+  std::string debugString = progressStr.str() + "\n";
   CFG_post_msg(debugString.c_str(), "", false);
-  std::cout << debugString;
-  std::cout.flush();
+  // std::cout << debugString;
+  // std::cout.flush();
   return progressStr.str();
 }
 
@@ -360,9 +360,11 @@ void programmer_entry(CFGCommon_ARG* cmdarg) {
       }
 
       if (status != ProgrammerErrorCode::NoError) {
-        CFG_POST_ERR("Failed to program FPGA. Error code: %d", status);
+        CFG_POST_ERR("Failed to program %s FPGA. Error code: %d", bitstreamFile.c_str(), status);
         cmdarg->tclStatus = TCL_ERROR;
         return;
+      } else {
+        CFG_POST_MSG("Programmed '%s' successfully.", bitstreamFile.c_str());
       }
     } else if (subCmd == "otp") {
       auto otp_arg =
@@ -422,9 +424,11 @@ void programmer_entry(CFGCommon_ARG* cmdarg) {
       }
 
       if (status != ProgrammerErrorCode::NoError) {
-        CFG_POST_ERR("Failed to program device OTP. Error code: %d", status);
+        CFG_POST_ERR("Failed to program device OTP %s. Error code: %d", bitstreamFile.c_str(), status);
         cmdarg->tclStatus = TCL_ERROR;
         return;
+      } else {
+        CFG_POST_MSG("Programmed OTP '%s' successfully.", bitstreamFile.c_str());
       }
     } else if (subCmd == "flash") {
       auto flash_arg =
@@ -477,9 +481,11 @@ void programmer_entry(CFGCommon_ARG* cmdarg) {
       }
 
       if (status != ProgrammerErrorCode::NoError) {
-        CFG_POST_ERR("Failed Flash programming. Error code: %d", status);
+        CFG_POST_ERR("Failed Flash programming %s FPGA. Error code: %d", bitstreamFile.c_str(), status);
         cmdarg->tclStatus = TCL_ERROR;
         return;
+      } else {
+        CFG_POST_MSG("Flash programming '%s' successfully.", bitstreamFile.c_str());
       }
     }
   }
@@ -500,10 +506,10 @@ int InitLibrary(std::string openOCDPath) {
 }
 
 std::string GetErrorMessage(int errorCode) {
-  auto it = ErrorMessages.find(errorCode);
-  if (it != ErrorMessages.end()) {
-    return it->second;
-  }
+  // auto it = ErrorMessages.find(errorCode);
+  // if (it != ErrorMessages.end()) {
+  //   return it->second;
+  // }
   return "Unknown error.";
 }
 

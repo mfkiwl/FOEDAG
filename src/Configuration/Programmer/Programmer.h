@@ -54,7 +54,7 @@ namespace FOEDAG {
 //   UnsupportedFunc = -113,
 // };
 
-extern std::map<int, std::string> ErrorMessages;
+// extern std::map<int, std::string> ErrorMessages;
 
 // struct TapInfo {
 //   int index;
