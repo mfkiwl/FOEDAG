@@ -1,8 +1,6 @@
 
 #include "ProgrammerTool.h"
 
-#include <map>
-
 #include "Configuration/CFGCommon/CFGCommon.h"
 #include "Programmer_errror_code.h"
 
@@ -14,7 +12,6 @@ ProgrammerTool::ProgrammerTool(ProgrammingAdapter* adapter)
 }
 
 ProgrammerTool::~ProgrammerTool() {
-  // Clean-up code if needed
 }
 
 int ProgrammerTool::program_fpga(

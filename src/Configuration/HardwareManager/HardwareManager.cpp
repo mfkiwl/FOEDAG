@@ -24,10 +24,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "Configuration/CFGCommon/CFGCommon.h"
 #include "libusb.h"
 
-// testing
-#include <chrono>
-#include <thread>
-
 #define HM_USB_DESC_LENGTH (256)
 #define HM_DEFAULT_CABLE_SPEED_KHZ (1000)
 namespace FOEDAG {

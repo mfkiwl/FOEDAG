@@ -32,7 +32,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "ProgrammerGuiInterface.h"
 #include "Programmer_errror_code.h"
 #include "Utils/StringUtils.h"
-#include "libusb.h"
 
 namespace FOEDAG {
 
