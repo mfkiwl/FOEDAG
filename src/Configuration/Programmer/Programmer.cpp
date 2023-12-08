@@ -21,9 +21,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "Programmer.h"
 
-#include <numeric> // for std::accumulate
+#include <numeric>  // for std::accumulate
 #include <sstream>  // for std::stringstream
-#include <thread> // for std::this_thread::sleep_for
+#include <thread>   // for std::this_thread::sleep_for
 
 #include "CFGCommon/CFGArg_auto.h"
 #include "CFGCommon/CFGCommon.h"
@@ -38,6 +38,16 @@ namespace FOEDAG {
 
 // openOCDPath used by library
 static std::string libOpenOcdExecPath;
+
+static std::map<Cable, uint32_t, CompareCable> cableSpeedMap = {};
+
+uint32_t GetCableSpeedFromMap(const Cable& cable) {
+  auto cableIter = cableSpeedMap.find(cable);
+  if (cableIter != cableSpeedMap.end()) {
+    return cableIter->second;
+  }
+  return HM_DEFAULT_CABLE_SPEED_KHZ;
+}
 
 std::map<int, std::string> ErrorMessages = {
     {NoError, "Success"},
@@ -184,6 +194,18 @@ void programmer_entry(CFGCommon_ARG* cmdarg) {
           CFG_POST_MSG("<test> flash verified- %d %% ", i);
         }
       }
+    } else if (subCmd == "jtag_frequency") {
+      auto jtag_frequency_arg =
+          static_cast<const CFGArg_PROGRAMMER_JTAG_FREQUENCY*>(
+              arg->get_sub_arg());
+      std::string cableInput = jtag_frequency_arg->cable;
+      if (jtag_frequency_arg->m_args.size() == 1) {
+        uint32_t speed = static_cast<uint32_t>(
+            CFG_convert_string_to_u64(jtag_frequency_arg->m_args[0]));
+        cmdarg->tclOutput = "";
+      } else {
+        cmdarg->tclOutput = "1000";
+      }
     }
   } else {
     // check openocd executable
@@ -307,6 +329,9 @@ void programmer_entry(CFGCommon_ARG* cmdarg) {
       }
       openOcd.update_taplist(taplist);
       ProgrammerTool programmer{&openOcd};
+      auto speed = GetCableSpeedFromMap(device.cable);
+      device.cable.speed = speed;
+      CFG_POST_MSG("Speed: %d", speed);
       std::atomic<bool> stop = false;
       ProgressCallback progress = nullptr;
       auto gui = Gui::GuiInterface();
@@ -372,6 +397,9 @@ void programmer_entry(CFGCommon_ARG* cmdarg) {
       }
       openOcd.update_taplist(taplist);
       ProgrammerTool programmer{&openOcd};
+      auto speed = GetCableSpeedFromMap(device.cable);
+      device.cable.speed = speed;
+      CFG_POST_MSG("Speed: %d", speed);
       std::atomic<bool> stop = false;
       ProgressCallback progress = nullptr;
       auto gui = Gui::GuiInterface();
@@ -430,6 +458,9 @@ void programmer_entry(CFGCommon_ARG* cmdarg) {
       }
       openOcd.update_taplist(taplist);
       ProgrammerTool programmer{&openOcd};
+      auto speed = GetCableSpeedFromMap(device.cable);
+      device.cable.speed = speed;
+      CFG_POST_MSG("Speed: %d", speed);
       std::atomic<bool> stop = false;
       ProgressCallback progress = nullptr;
       auto gui = Gui::GuiInterface();
@@ -463,6 +494,34 @@ void programmer_entry(CFGCommon_ARG* cmdarg) {
       } else {
         CFG_POST_MSG("Flash programming '%s' successfully.",
                      bitstreamFile.c_str());
+      }
+    } else if (subCmd == "jtag_frequency") {
+      Cable cable;
+      uint32_t speed;
+      auto jtag_frequency_arg =
+          static_cast<const CFGArg_PROGRAMMER_JTAG_FREQUENCY*>(
+              arg->get_sub_arg());
+      std::string cableInput = jtag_frequency_arg->cable;
+      if (!hardware_manager.is_cable_exists(cableInput, true, cable)) {
+        CFG_POST_ERR("Cable '%s' not found", cableInput.c_str());
+        cmdarg->tclStatus = TCL_ERROR;
+        return;
+      }
+      if (jtag_frequency_arg->m_args.size() == 1) {
+        speed = static_cast<uint32_t>(
+            CFG_convert_string_to_u64(jtag_frequency_arg->m_args[0]));
+        // set jtag speed
+        cableSpeedMap[cable] = speed;
+        cmdarg->tclOutput = "";
+      } else {
+        // return jtag speed
+        auto it = cableSpeedMap.find(cable);
+        if (it != cableSpeedMap.end()) {
+          speed = it->second;
+        } else {
+          speed = 1000;
+        }
+        cmdarg->tclOutput = std::to_string(speed);
       }
     }
   }

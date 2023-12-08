@@ -11,8 +11,7 @@ ProgrammerTool::ProgrammerTool(ProgrammingAdapter* adapter)
   CFG_ASSERT(m_adapter != nullptr);
 }
 
-ProgrammerTool::~ProgrammerTool() {
-}
+ProgrammerTool::~ProgrammerTool() {}
 
 int ProgrammerTool::program_fpga(
     const Device& device, const std::string& bitfile, std::atomic<bool>& stop,

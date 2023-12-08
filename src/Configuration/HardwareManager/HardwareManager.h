@@ -30,6 +30,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "JtagAdapter.h"
 #include "Tap.h"
 
+#define HM_USB_DESC_LENGTH (256)
+#define HM_DEFAULT_CABLE_SPEED_KHZ (1000)
 namespace FOEDAG {
 
 struct HardwareManager_CABLE_INFO {
@@ -55,8 +57,11 @@ class HardwareManager {
   std::vector<Tap> get_taps(const Cable &cable);
   std::vector<Cable> get_cables();
   bool is_cable_exists(uint32_t cable_index);
+  bool is_cable_exists(uint32_t cable_index, Cable &out_cable);
   bool is_cable_exists(std::string cable_name,
                        bool numeric_name_as_index = false);
+  bool is_cable_exists(std::string cable_name, bool numeric_name_as_index,
+                       Cable &out_cable);
   std::vector<Device> get_devices();
   std::vector<Device> get_devices(const Cable &cable);
   std::vector<Device> get_devices(uint32_t cable_index);
