@@ -21,11 +21,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "Programmer.h"
 
-#include <iostream>
-#include <numeric>
+#include <numeric> // for std::accumulate
 #include <sstream>  // for std::stringstream
-#include <thread>
-#include <unordered_set>
+#include <thread> // for std::this_thread::sleep_for
 
 #include "CFGCommon/CFGArg_auto.h"
 #include "CFGCommon/CFGCommon.h"
@@ -35,7 +33,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "ProgrammerTool.h"
 #include "Programmer_errror_code.h"
 #include "Programmer_helper.h"
-#include "libusb.h"
 #include "tcl.h"
 namespace FOEDAG {
 
