@@ -200,8 +200,6 @@ void programmer_entry(CFGCommon_ARG* cmdarg) {
               arg->get_sub_arg());
       std::string cableInput = jtag_frequency_arg->cable;
       if (jtag_frequency_arg->m_args.size() == 1) {
-        uint32_t speed = static_cast<uint32_t>(
-            CFG_convert_string_to_u64(jtag_frequency_arg->m_args[0]));
         cmdarg->tclOutput = "";
       } else {
         cmdarg->tclOutput = "1000";
