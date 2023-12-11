@@ -7,8 +7,7 @@
 namespace FOEDAG {
 
 ProgrammerTool::ProgrammerTool(ProgrammingAdapter* adapter)
-    : m_adapter(adapter)
-{
+    : m_adapter(adapter) {
   CFG_ASSERT(m_adapter != nullptr);
 }
 
