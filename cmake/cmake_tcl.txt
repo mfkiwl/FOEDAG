@@ -76,6 +76,7 @@ else()
 
   endif()
   
+  message("HERE ${CMAKE_CURRENT_BINARY_DIR}")
   add_library(tcl_stubb STATIC IMPORTED )
   set_target_properties(tcl_stubb PROPERTIES
     IMPORTED_LOCATION ${CMAKE_CURRENT_BINARY_DIR}/../../lib/${TCL_STUBB_LIB})

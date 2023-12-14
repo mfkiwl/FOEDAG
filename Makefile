@@ -36,6 +36,7 @@ endif
 
 PREFIX ?= /usr/local
 ADDITIONAL_CMAKE_OPTIONS ?=
+CPU_CORES = 1
 
 # If 'on', then the progress messages are printed. If 'off', makes it easier
 # to detect actual warnings and errors  in the build output.
