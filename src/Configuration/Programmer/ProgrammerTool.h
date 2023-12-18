@@ -11,25 +11,25 @@ struct Tap;
 
 enum class ProgramFlashOperation : uint32_t;
 
-class ProgrammerTool : public ProgrammingAdapter {
+class ProgrammerTool {
  public:
   ProgrammerTool(ProgrammingAdapter* adapter);
-  ~ProgrammerTool() override;
+  ~ProgrammerTool();
   int program_fpga(const Device& device, const std::string& bitfile,
                    std::atomic<bool>& stop, std::ostream* outStream = nullptr,
                    OutputMessageCallback callbackMsg = nullptr,
-                   ProgressCallback callbackProgress = nullptr) override;
+                   ProgressCallback callbackProgress = nullptr);
   int program_flash(const Device& device, const std::string& bitfile,
                     std::atomic<bool>& stop, ProgramFlashOperation modes,
                     std::ostream* outStream = nullptr,
                     OutputMessageCallback callbackMsg = nullptr,
-                    ProgressCallback callbackProgress = nullptr) override;
+                    ProgressCallback callbackProgress = nullptr);
   int program_otp(const Device& device, const std::string& bitfile,
                   std::atomic<bool>& stop, std::ostream* outStream = nullptr,
                   OutputMessageCallback callbackMsg = nullptr,
-                  ProgressCallback callbackProgress = nullptr) override;
+                  ProgressCallback callbackProgress = nullptr);
   int query_fpga_status(const Device& device, CfgStatus& cfgStatus,
-                        std::string& outputMessage) override;
+                        std::string& outputMessage);
 
  private:
   ProgrammingAdapter* m_adapter;
