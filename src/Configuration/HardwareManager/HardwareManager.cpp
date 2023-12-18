@@ -249,8 +249,8 @@ std::vector<Device> HardwareManager::get_devices(const Cable& cable) {
           (device_info.idcode & device_info.irmask)) {
         found = true;
         Tap tap{tap_index++, idcode, device_info.irlength};
-        if (device_info.type == GEMINI || device_info.type == OCLA
-            || device_info.type == VIRGO) {
+        if (device_info.type == GEMINI || device_info.type == OCLA ||
+            device_info.type == VIRGO) {
           Device device{};
           device.index = device_index++;
           device.type = device_info.type;
