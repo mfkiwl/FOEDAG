@@ -32,8 +32,8 @@ const std::vector<HardwareManager_CABLE_INFO> HardwareManager::m_cable_db = {
     {"Jlink", JLINK, 0x1366, 0x0101}};
 
 const std::vector<HardwareManager_DEVICE_INFO> HardwareManager::m_device_db = {
-    {"Gemini", 0x1000563d, 5, 0xffffffff, GEMINI, 16384},
-    {"OCLA", 0x10000db3, 5, 0xffffffff, OCLA, 0}};
+    {"Gemini", 0x1000563d, 5, 0xffffffff, GEMINI},
+    {"OCLA", 0x10000db3, 5, 0xffffffff, OCLA}};
 
 HardwareManager::HardwareManager(JtagAdapter* adapter) : m_adapter(adapter) {
   CFG_ASSERT(m_adapter != nullptr);
@@ -249,12 +249,12 @@ std::vector<Device> HardwareManager::get_devices(const Cable& cable) {
           (device_info.idcode & device_info.irmask)) {
         found = true;
         Tap tap{tap_index++, idcode, device_info.irlength};
-        if (device_info.type == GEMINI || device_info.type == OCLA) {
+        if (device_info.type == GEMINI || device_info.type == OCLA
+            || device_info.type == VIRGO) {
           Device device{};
           device.index = device_index++;
           device.type = device_info.type;
           device.name = device_info.name;
-          device.flashSize = device_info.flashsize;
           device.cable = cable;
           device.tap = tap;
           devices.push_back(device);
