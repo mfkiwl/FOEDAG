@@ -58,6 +58,8 @@ add_library(projnavigator STATIC
 
 target_link_libraries(projnavigator  PUBLIC Qt6::Widgets Qt6::Core Qt6::Gui Qt6::Xml)
 target_compile_definitions(projnavigator PRIVATE PROJECTNAVIGATOR_LIBRARY)
+target_include_directories(projnavigator PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/../../third_party/xerces-c/src
+PUBLIC ${CMAKE_CURRENT_BINARY_DIR}/../../third_party/xerces-c/src)
 
 set(PROJNAVI_STATIC_LIB libprojnavigator.a)
 if (MSVC)

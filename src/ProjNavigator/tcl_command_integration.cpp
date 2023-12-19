@@ -23,14 +23,24 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <QDebug>
 #include <QDir>
 #include <QString>
+#include <xercesc/framework/LocalFileInputSource.hpp>
+#include <xercesc/parsers/XercesDOMParser.hpp>
+#include <xercesc/sax/ErrorHandler.hpp>
+#include <xercesc/sax/SAXParseException.hpp>
+#include <xercesc/util/XMLString.hpp>
+#include <xercesc/validators/common/Grammar.hpp>
 
 #include "Compiler/CompilerDefines.h"
+#include "MainWindow/Session.h"
 #include "NewProject/ProjectManager/project_manager.h"
 #include "ProjNavigator/sources_form.h"
 #include "Utils/QtUtils.h"
 #include "Utils/StringUtils.h"
 #include "nlohmann_json/json.hpp"
 using json = nlohmann::ordered_json;
+XERCES_CPP_NAMESPACE_USE
+
+extern FOEDAG::Session *GlobalSession;
 
 namespace FOEDAG {
 
@@ -420,6 +430,67 @@ std::vector<std::string> TclCommandIntegration::GetClockList(
 void TclCommandIntegration::updateHierarchyView() { emit updateHierarchy(); }
 
 void TclCommandIntegration::updateReportsView() { emit updateReports(); }
+
+class WStr {
+ private:
+  XMLCh *wStr;
+
+ public:
+  WStr(const char *str) { wStr = XMLString::transcode(str); }
+
+  ~WStr() { XMLString::release(&wStr); }
+
+  operator const XMLCh *() const { return wStr; }
+};
+
+class ParserErrorHandler : public ErrorHandler {
+ public:
+  void warning(const SAXParseException &exc) override {
+    char *msg = XMLString::transcode(exc.getMessage());
+    qDebug() << "Warning" << msg;
+    XMLString::release(&msg);
+  }
+  void error(const SAXParseException &exc) override {
+    char *msg = XMLString::transcode(exc.getMessage());
+    qDebug() << "Error " << msg << exc.getLineNumber() << exc.getColumnNumber();
+    XMLString::release(&msg);
+  }
+  void fatalError(const SAXParseException &exc) override {
+    char *msg = XMLString::transcode(exc.getMessage());
+    qDebug() << "Fatal " << msg;
+    XMLString::release(&msg);
+  }
+  void resetErrors() override {
+    //
+  }
+};
+
+bool TclCommandIntegration::ValidateDeviceFile(
+    const std::filesystem::path &deviceFile, std::ostream &out) {
+  XMLPlatformUtils::Initialize();
+
+  std::filesystem::path datapath = GlobalSession->Context()->DataPath();
+  std::filesystem::path schemaFilePath =
+      datapath / std::string("etc") / std::string("device.xsd");
+
+  XercesDOMParser *domParser = new XercesDOMParser;
+
+  ParserErrorHandler parserErrorHandler{};
+
+  domParser->setErrorHandler(&parserErrorHandler);
+  domParser->setValidationScheme(XercesDOMParser::Val_Auto);
+  domParser->setDoNamespaces(true);
+  domParser->setDoSchema(true);
+  domParser->setValidationConstraintFatal(true);
+  domParser->setValidationSchemaFullChecking(true);
+  domParser->setExternalNoNamespaceSchemaLocation(
+      XMLString::transcode(schemaFilePath.c_str()));
+
+  domParser->parse(XMLString::transcode(deviceFile.c_str()));
+
+  XMLPlatformUtils::Terminate();
+  return domParser->getErrorCount() == 0;
+}
 
 void TclCommandIntegration::createNewDesign(const QString &projName,
                                             int projectType) {

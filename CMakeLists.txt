@@ -84,6 +84,7 @@ add_subdirectory(third_party/gtkwave_cmake)
 add_subdirectory(third_party/scope_guard)
 add_subdirectory(third_party/openocd_cmake)
 add_subdirectory(third_party/openssl)
+add_subdirectory(third_party/xerces-c)
 
 add_subdirectory(tests/tclutils)
 add_subdirectory(tests/unittest)
@@ -337,6 +338,7 @@ add_dependencies(ipconfigurator_bin tcl_stubb_build)
 add_dependencies(pinassignment tcl_stubb_build)
 add_dependencies(projnavigator tcl_build)
 add_dependencies(configuration openssl_lib_test)
+add_dependencies(newproject xerces-c)
 
 if (APPLE)
   # In macOS, it is necessary to add the correct @rpath to the executable for
@@ -363,6 +365,7 @@ endif()
 
 target_link_libraries(foedag-bin PUBLIC foedag )
 target_link_directories(foedag-bin PUBLIC ${CMAKE_CURRENT_BINARY_DIR}/lib PUBLIC ${CMAKE_INSTALL_PREFIX}/lib/foedag/lib)
+target_link_directories(foedag-bin PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/third_party/xerces-c-3.2.4/src)
 target_link_libraries(foedag  PUBLIC
   foedagcore
   newproject
@@ -386,6 +389,7 @@ target_link_libraries(foedag  PUBLIC
   pinassignment
   scope_guard
   cfgcompiler
+  xerces-c
 )
 target_link_libraries(foedag  PUBLIC Qt6::Widgets Qt6::Core Qt6::Gui Qt6::Xml)
 

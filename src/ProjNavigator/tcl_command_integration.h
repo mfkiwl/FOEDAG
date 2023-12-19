@@ -64,6 +64,8 @@ class TclCommandIntegration : public QObject {
       const std::filesystem::path &path, bool &vhdl);
   void updateHierarchyView();
   void updateReportsView();
+  bool ValidateDeviceFile(const std::filesystem::path &deviceFile,
+                          std::ostream &out);
 
  signals:
   void newDesign(const QString &);
