@@ -201,6 +201,10 @@ jobs:
 
     - name: Configure shell
       run: |
+        useradd -m -d /opt -s /bin/bash -p $(openssl passwd -1 "$pass") runner
+        chown -R runner $GITHUB_WORKSPACE
+        su runner
+        id      
         source /opt/rh/devtoolset-11/enable
         echo 'CC=/opt/rh/devtoolset-11/root/usr/bin/gcc' >> $GITHUB_ENV
         echo 'CXX=/opt/rh/devtoolset-11/root/usr/bin/g++' >> $GITHUB_ENV
@@ -213,6 +217,8 @@ jobs:
     - name: Test/batch
       if: matrix.mode == 'test/batch'
       run: |
+        su runner
+        id      
         export LD_LIBRARY_PATH=${GITHUB_WORKSPACE}/dbuild/bin/gtkwave/lib:${GITHUB_WORKSPACE}/third_party/openssl:$LD_LIBRARY_PATH
         make MONACO_EDITOR=1 debug test/unittest-d
         make MONACO_EDITOR=1 release test/batch
@@ -220,6 +226,9 @@ jobs:
     - name: Test/gui
       if: matrix.mode == 'test/gui'
       run: |
+        su runner
+        id
+        pwd      
         export LD_LIBRARY_PATH=${GITHUB_WORKSPACE}/dbuild/bin/gtkwave/lib:${GITHUB_WORKSPACE}/third_party/openssl:$LD_LIBRARY_PATH
         make MONACO_EDITOR=1 debug
         make MONACO_EDITOR=1 test/gui
