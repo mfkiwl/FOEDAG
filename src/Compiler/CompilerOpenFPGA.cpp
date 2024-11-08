@@ -4049,6 +4049,8 @@ bool CompilerOpenFPGA::LoadDeviceData(
                 BaseDeviceName(name);
                 // field is used for identify base for custom device
                 // no action so far
+              } else if (file_type == "power_data") {
+                // field will be used for power data config, skip for now.
               } else {
                 ErrorMessage("Invalid device config type: " + file_type + "\n");
                 status = false;
